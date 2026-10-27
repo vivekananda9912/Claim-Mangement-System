@@ -76,15 +76,15 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
   const getStageLabel = (stage: number) => {
     switch (stage) {
       case 1:
-        return '01. Policy & Ingestion';
+        return '01. Capture Request';
       case 2:
-        return '02. Policy & Eligibility';
+        return '02. Initial Review';
       case 3:
-        return '03. Evidence & DCN Audit';
+        return '03. Claim & Auth Evidence';
       case 4:
-        return '04. Clinical & Fraud Adjudication';
+        return '04. Decision Stage';
       case 5:
-        return '05. Settlement & Disbursement';
+        return '05. Closeout & Settlement';
       case 6:
         return '06. Closed & Archived';
       default:

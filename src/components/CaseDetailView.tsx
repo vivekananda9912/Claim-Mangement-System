@@ -28,6 +28,8 @@ import {
   FileCheck,
   ArrowLeft,
 } from 'lucide-react';
+import { OpenReviewModal } from './OpenReviewModal';
+import { CloseoutModal } from './CloseoutModal';
 
 interface CaseDetailViewProps {
   caseId: string;
@@ -61,6 +63,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
   const [newDocType, setNewDocType] = useState<DcnDocumentType>('CHART_NOTES');
   const [newFileName, setNewFileName] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showOpenReviewModal, setShowOpenReviewModal] = useState(false);
+  const [showCloseoutModal, setShowCloseoutModal] = useState(false);
   const [verifyNotes, setVerifyNotes] = useState('');
   const [selectedEvidenceForVerify, setSelectedEvidenceForVerify] = useState<string | null>(null);
 
@@ -97,12 +101,12 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
   };
 
   const stagesList = [
-    { num: 1, label: '01. Ingestion' },
-    { num: 2, label: '02. Eligibility' },
-    { num: 3, label: '03. Evidence DCN' },
-    { num: 4, label: '04. Clinical & SIU' },
-    { num: 5, label: '05. Settlement' },
-    { num: 6, label: '06. Archived' },
+    { num: 1, label: '01. Capture Request' },
+    { num: 2, label: '02. Initial Review' },
+    { num: 3, label: '03. Claim & Auth Evidence' },
+    { num: 4, label: '04. Decision Stage' },
+    { num: 5, label: '05. Closeout & Settlement' },
+    { num: 6, label: '06. Closed & Archived' },
   ];
 
   const activePendingTask = tasks.find((t) => t.status !== 'COMPLETED' && t.status !== 'RESOLVED');
@@ -215,51 +219,64 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
       {/* Contextual Stage Action Callout Banner */}
       <div className="max-w-7xl w-full mx-auto px-6 pt-5">
         {activeCase.currentStage === 2 && (
-          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span className="text-rose-900 font-medium">
-                Stage 02 Duplicate Exception Hold: Conflicting claim collision detected. Triage decision required to advance to Stage 03.
-              </span>
+          <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <FileCheck className="w-5 h-5 text-blue-600 shrink-0" />
+              <div>
+                <span className="font-bold text-blue-900 block">
+                  Stage 02 Initial Review: Confirm Captured Request & Member HCID
+                </span>
+                <span className="text-blue-800 text-[11px]">
+                  Confirm member HCID, household dependents, coverage financials, and provider credentials before adding claim & auth evidence.
+                </span>
+              </div>
             </div>
-            {tasks.some((t) => t.taskType === 'DUPLICATE_CLAIM_CHECK') && onOpenTask && (
-              <button
-                onClick={() => {
-                  const t = tasks.find((tsk) => tsk.taskType === 'DUPLICATE_CLAIM_CHECK');
-                  if (t) onOpenTask(t._id);
-                }}
-                className="px-3 py-1 bg-rose-700 hover:bg-rose-800 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
-              >
-                Resolve Duplicate
-              </button>
-            )}
+            <button
+              onClick={() => setShowOpenReviewModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Open-Review Screen</span>
+            </button>
           </div>
         )}
 
         {activeCase.currentStage === 3 && (
-          <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="text-amber-900 font-medium">
-                Stage 03 Evidence Audit: {activeCase.missingDocumentTypes.length} mandatory Document Control Numbers (DCN) needed to advance to Clinical Review.
-              </span>
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <span className="font-bold text-amber-900 block">
+                  Stage 03 Claim & Auth Evidence: Missing Legal DCN Documents
+                </span>
+                <span className="text-amber-800 text-[11px]">
+                  {activeCase.missingDocumentTypes.length > 0
+                    ? `Missing ${activeCase.missingDocumentTypes.join(', ')}. Upload & verify DCNs to advance to Decision Stage.`
+                    : 'Claim items and authorizations logged. Upload additional evidence or proceed.'}
+                </span>
+              </div>
             </div>
             <button
               onClick={() => setActiveTab('evidences')}
-              className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors"
             >
-              Upload / Verify DCN
+              Open Evidence DCN Vault
             </button>
           </div>
         )}
 
         {activeCase.currentStage === 4 && (
-          <div className="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Stethoscope className="w-4 h-4 text-blue-600 shrink-0" />
-              <span className="text-blue-900 font-medium">
-                Stage 04 Physician Adjudication: Doctor Review required. (Restricted to Doctor Approver role).
-              </span>
+          <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <Stethoscope className="w-5 h-5 text-purple-600 shrink-0" />
+              <div>
+                <span className="font-bold text-purple-900 block">
+                  Stage 04 Decision Stage: Doctor Adjudication & Medical Necessity Review
+                </span>
+                <span className="text-purple-800 text-[11px]">
+                  Decision pending on medical necessity, CPT code reclassifications, and loss reserve authorization.
+                </span>
+              </div>
             </div>
             {tasks.some((t) => t.taskType === 'DOCTOR_CLINICAL_REVIEW') && onOpenTask && (
               <button
@@ -267,27 +284,35 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                   const t = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
                   if (t) onOpenTask(t._id);
                 }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
               >
-                Work on Doctor Review
+                <span>Open Decision Workbench</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
         )}
 
         {activeCase.currentStage === 5 && (
-          <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="text-emerald-900 font-medium">
-                Stage 05 Ready for Settlement: Loss reserve approved at ${activeCase.financials.preliminaryReserve.toFixed(2)}. Net payout: ${activeCase.financials.netPayout.toFixed(2)}.
-              </span>
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <CreditCard className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <span className="font-bold text-emerald-900 block">
+                  Stage 05 Closeout Screen: Ready to Authorize Settlement & Close Case
+                </span>
+                <span className="text-emerald-800 text-[11px]">
+                  Clinical decision finalized. Authorized Net Insurer Disbursement: ${activeCase.financials.netPayout.toFixed(2)}.
+                </span>
+              </div>
             </div>
             <button
-              onClick={() => setActiveTab('settlement')}
-              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+              onClick={() => setShowCloseoutModal(true)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
             >
-              Review Voucher
+              <CreditCard className="w-4 h-4" />
+              <span>Launch Closeout Screen</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -311,11 +336,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
           {[
             { id: 'overview', label: 'Overview & Policy', icon: Building2 },
             { id: 'claim_lines', label: `Claim Lines (${claim?.items.length || 0})`, icon: Stethoscope },
-            { id: 'evidences', label: `Evidence Vault (${evidences.length})`, icon: FileText },
+            { id: 'evidences', label: `Claim & Auth Evidence (${evidences.length})`, icon: FileText },
             { id: 'tasks', label: `Workbasket Tasks (${tasks.length})`, icon: Clock },
             { id: 'fraud', label: 'Duplicate & Fraud Risk', icon: ShieldAlert },
             { id: 'events', label: `Event Stream (${events.length})`, icon: History },
-            { id: 'settlement', label: 'Settlement & Voucher', icon: CreditCard },
+            { id: 'settlement', label: 'Closeout & Settlement', icon: CreditCard },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -370,8 +395,9 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                     <div className="text-sm font-bold text-slate-900">
                       {activeCase.patientName}
                     </div>
-                    <div className="text-slate-600 mt-0.5">
-                      Patient Member ID: <span className="font-mono font-semibold">{activeCase.patientMemberId}</span>
+                    <div className="text-slate-600 mt-0.5 space-y-0.5 font-mono text-[11px]">
+                      <div>Patient Member ID: <span className="font-semibold">{activeCase.patientMemberId}</span></div>
+                      <div className="text-blue-700 font-bold">Unique HCID: {activeCase.patientHcid || 'HCID-8492-1003-C'}</div>
                     </div>
                   </div>
 
@@ -977,18 +1003,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
 
                 {activeCase.currentStage < 6 && (
                   <button
-                    onClick={() =>
-                      settleAndCloseCase({
-                        caseId: activeCase._id,
-                        authorizedAmount: activeCase.financials.netPayout,
-                        paymentMethod: 'ELECTRONIC_FUNDS_TRANSFER',
-                        voucherNotes: 'Authorized in accordance with Gold PPO fee schedule.',
-                      })
-                    }
-                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+                    onClick={() => setShowCloseoutModal(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
-                    <span>Authorize Voucher & Close Case (Stage 6)</span>
+                    <span>Launch Stage 05 Closeout Screen</span>
                   </button>
                 )}
               </div>
@@ -997,6 +1016,22 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
         </div>
       </div>
       </div>
+
+      {/* Open Review Modal for Stage 02 Initial Review */}
+      {showOpenReviewModal && (
+        <OpenReviewModal
+          caseId={activeCase._id}
+          onClose={() => setShowOpenReviewModal(false)}
+        />
+      )}
+
+      {/* Closeout Modal for Stage 05 Closeout & Settlement */}
+      {showCloseoutModal && (
+        <CloseoutModal
+          caseId={activeCase._id}
+          onClose={() => setShowCloseoutModal(false)}
+        />
+      )}
     </div>
   );
 };

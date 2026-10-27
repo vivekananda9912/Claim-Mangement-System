@@ -20,12 +20,17 @@ export interface UserPersona {
 }
 
 export type CaseStage =
+  | 'CAPTURE_REQUEST'
+  | 'INITIAL_REVIEW'
+  | 'CLAIM_AUTH_EVIDENCE'
+  | 'DECISION_STAGE'
+  | 'CLOSEOUT_SETTLEMENT'
+  | 'CLOSED_ARCHIVED'
   | 'INTAKE_INGESTION'
   | 'POLICY_ELIGIBILITY'
   | 'EVIDENCE_DCN_AUDIT'
   | 'CLINICAL_FRAUD_ADJUDICATION'
-  | 'SETTLEMENT_DISBURSEMENT'
-  | 'CLOSED_ARCHIVED';
+  | 'SETTLEMENT_DISBURSEMENT';
 
 export interface StageDefinition {
   stageNumber: number;
@@ -150,16 +155,19 @@ export interface FraudAssessment {
 
 export interface FamilyMember {
   memberId: string;
+  hcid: string; // Unique Healthcare Identifier (HCID) e.g. HCID-8492-1001-A
   firstName: string;
   lastName: string;
   dob: string;
-  relationship: 'PRIMARY_SUBSCRIBER' | 'SPOUSE' | 'CHILD' | 'DEPENDENT';
+  relationship: 'PRIMARY_SUBSCRIBER' | 'SPOUSE' | 'CHILD' | 'PARENT' | 'DEPENDENT';
   gender: 'MALE' | 'FEMALE' | 'OTHER';
+  coverageStatus?: 'ACTIVE' | 'PENDING' | 'SUSPENDED';
 }
 
 export interface Customer {
   _id: string;
   familyPolicyNumber: string;
+  familyHcid: string; // Master Household HCID
   primarySubscriber: FamilyMember;
   dependents: FamilyMember[];
   contact: {
@@ -277,6 +285,7 @@ export interface Case {
   category: CareCategory;
   familyPolicyNumber: string;
   patientMemberId: string;
+  patientHcid?: string;
   patientName: string;
   assignedWorkbasket: WorkbasketId;
   assignedDoctorId?: string;

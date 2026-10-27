@@ -27,6 +27,8 @@ import {
   XCircle,
   HelpCircle,
 } from 'lucide-react';
+import { OpenReviewModal } from './OpenReviewModal';
+import { CloseoutModal } from './CloseoutModal';
 
 interface TaskWorkspaceViewProps {
   taskId: string;
@@ -84,6 +86,10 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
   // Settlement payment form state
   const [paymentMethod, setPaymentMethod] = useState('ELECTRONIC_FUNDS_TRANSFER');
   const [voucherNotes, setVoucherNotes] = useState('Authorized in accordance with Gold PPO allowable fee schedule.');
+
+  // Modal triggers
+  const [showOpenReviewModal, setShowOpenReviewModal] = useState(false);
+  const [showCloseoutModal, setShowCloseoutModal] = useState(false);
 
   if (!task || !activeCase) {
     return (
@@ -600,6 +606,45 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
               </div>
             )}
 
+            {/* STAGE 02 INITIAL REVIEW / ELIGIBILITY TASK */}
+            {(task.taskType === 'FAMILY_ELIGIBILITY_CHECK' || activeCase.currentStage === 2) && (
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                      <FileCheck2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-900">Stage 02 Initial Review: Verify Captured Request Details</h2>
+                      <p className="text-[11px] text-slate-500">
+                        Confirm patient unique HCID, coverage limits, provider NPI, and duplicate checks before adding claim & auth evidence.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                    Stage 02 Review
+                  </span>
+                </div>
+
+                <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="font-bold text-blue-900 block text-xs">Patient HCID Verification</span>
+                    <span className="text-blue-800 text-[11px]">
+                      {activeCase.patientName} · HCID: <strong className="font-mono">{activeCase.patientHcid || 'HCID-8492-1003-C'}</strong> · Member ID: {activeCase.patientMemberId}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowOpenReviewModal(true)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <FileCheck2 className="w-4 h-4" />
+                    <span>Launch Open-Review Screen</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* DUPLICATE CHECK RESOLUTION TASK */}
             {task.taskType === 'DUPLICATE_CLAIM_CHECK' && (
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-5">
@@ -708,6 +753,18 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                     <CreditCard className="w-4 h-4" />
                     <span>Authorize Electronic Voucher & Close Case (Stage 06)</span>
                   </button>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-slate-500 text-xs">Want to audit full ledger before disbursing?</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowCloseoutModal(true)}
+                      className="px-3.5 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>Launch Full Closeout Screen</span>
+                    </button>
+                  </div>
                 </form>
               </div>
             )}
@@ -851,6 +908,21 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      {showOpenReviewModal && (
+        <OpenReviewModal
+          caseId={activeCase._id}
+          onClose={() => setShowOpenReviewModal(false)}
+        />
+      )}
+
+      {showCloseoutModal && (
+        <CloseoutModal
+          caseId={activeCase._id}
+          onClose={() => setShowCloseoutModal(false)}
+        />
+      )}
     </div>
   );
 };

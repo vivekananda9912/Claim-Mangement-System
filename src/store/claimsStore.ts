@@ -145,6 +145,45 @@ class ClaimsEngine {
     this.notify();
   }
 
+  /**
+   * Realtime Member & Eligibility Lookup Service (Simulates EDI 270/271 & FHIR Directory)
+   */
+  public searchMembersByHcid(query: string) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      return this.customers;
+    }
+
+    return this.customers.filter((c) => {
+      // Check family policy or family HCID
+      if (
+        c.familyPolicyNumber.toLowerCase().includes(q) ||
+        (c.familyHcid && c.familyHcid.toLowerCase().includes(q))
+      ) {
+        return true;
+      }
+      // Check primary subscriber
+      const p = c.primarySubscriber;
+      if (
+        p.firstName.toLowerCase().includes(q) ||
+        p.lastName.toLowerCase().includes(q) ||
+        p.memberId.toLowerCase().includes(q) ||
+        (p.hcid && p.hcid.toLowerCase().includes(q))
+      ) {
+        return true;
+      }
+      // Check dependents (spouse, child, parent)
+      return c.dependents.some(
+        (d) =>
+          d.firstName.toLowerCase().includes(q) ||
+          d.lastName.toLowerCase().includes(q) ||
+          d.memberId.toLowerCase().includes(q) ||
+          (d.hcid && d.hcid.toLowerCase().includes(q)) ||
+          d.relationship.toLowerCase().includes(q)
+      );
+    });
+  }
+
   public getCustomers() {
     return this.customers;
   }
@@ -255,6 +294,7 @@ class ClaimsEngine {
   public submitClaimCase(params: {
     familyPolicyNumber: string;
     patientMemberId: string;
+    patientHcid?: string;
     claimType: 'PRE_SERVICE' | 'POST_SERVICE';
     category: 'MEDICAL' | 'PHARMACY' | 'PRESCRIPTION' | 'BEHAVIORAL_HEALTH';
     claimId: string;
@@ -278,14 +318,19 @@ class ClaimsEngine {
       return { success: false, caseId: '', caseNumber: '', message: 'Policy not found.' };
     }
 
-    // Identify patient name
+    // Identify patient name & HCID
     let patientName = 'Unknown Patient';
+    let resolvedHcid = params.patientHcid || 'HCID-GEN-9901';
     if (customer) {
       if (customer.primarySubscriber.memberId === params.patientMemberId) {
         patientName = `${customer.primarySubscriber.firstName} ${customer.primarySubscriber.lastName}`;
+        resolvedHcid = customer.primarySubscriber.hcid;
       } else {
         const dep = customer.dependents.find((d) => d.memberId === params.patientMemberId);
-        if (dep) patientName = `${dep.firstName} ${dep.lastName}`;
+        if (dep) {
+          patientName = `${dep.firstName} ${dep.lastName}`;
+          resolvedHcid = dep.hcid;
+        }
       }
     }
 
@@ -358,34 +403,22 @@ class ClaimsEngine {
     const totalCoinsurance = claimItems.reduce((acc, i) => acc + i.coinsurance, 0);
     const netPayout = Math.max(0, totalAllowable - totalCopay - totalCoinsurance);
 
-    // Determine initial stage and status
-    let currentStage = 1;
-    let stageName: Case['stageName'] = 'INTAKE_INGESTION';
-    let status: Case['status'] = 'INTAKE_NEW';
-    let assignedWorkbasket: WorkbasketId = 'INTAKE_TRIAGE';
+    // Initial Stage is Stage 2: Initial Review (Request Captured in Stage 1)
+    const currentStage = 2;
+    const stageName: Case['stageName'] = 'INITIAL_REVIEW';
+    const status: Case['status'] = 'IN_REVIEW';
+    const assignedWorkbasket: WorkbasketId = 'INTAKE_TRIAGE';
     const missingDocs: DcnDocumentType[] = [];
 
-    // Duplicate handling
-    const isDuplicate = !dupResult.passed;
-    if (isDuplicate) {
-      currentStage = 2;
-      stageName = 'POLICY_ELIGIBILITY';
-      status = 'IN_REVIEW';
-      assignedWorkbasket = 'INTAKE_TRIAGE';
-    } else {
-      currentStage = 3;
-      stageName = 'EVIDENCE_DCN_AUDIT';
-      status = 'PENDING_EVIDENCE';
-      assignedWorkbasket = 'EVIDENCE_DEFICIENCY';
-
-      // Required docs check
-      if (params.items.some((i) => i.billedAmount > 2000)) {
-        missingDocs.push('CHART_NOTES');
-      }
-      if (params.claimType === 'PRE_SERVICE') {
-        missingDocs.push('PRIOR_AUTH_FORM');
-      }
+    // Required docs check for stage 3
+    if (params.items.some((i) => i.billedAmount > 2000)) {
+      missingDocs.push('CHART_NOTES');
     }
+    if (params.claimType === 'PRE_SERVICE') {
+      missingDocs.push('PRIOR_AUTH_FORM');
+    }
+
+    const isDuplicate = !dupResult.passed;
 
     const newCase: Case = {
       _id: caseId,
@@ -400,6 +433,7 @@ class ClaimsEngine {
       category: params.category,
       familyPolicyNumber: params.familyPolicyNumber,
       patientMemberId: params.patientMemberId,
+      patientHcid: resolvedHcid,
       patientName,
       assignedWorkbasket,
       assignedDoctorId: 'DOC-DR-CHEN',
@@ -428,14 +462,32 @@ class ClaimsEngine {
       caseId,
       caseNumber,
       'CASE_CREATED',
-      `Master Case created for ${params.claimType} ${params.category} claim (${params.claimId}) totaling $${billedTotal.toFixed(2)}.`,
+      `Master Case created via Capture Request for ${params.claimType} ${params.category} claim (${params.claimId}) for patient ${patientName} (${resolvedHcid}) totaling $${billedTotal.toFixed(2)}.`,
       {
         claimId: params.claimId,
         patientName,
+        patientHcid: resolvedHcid,
         familyPolicyNumber: params.familyPolicyNumber,
         billedTotal,
       }
     );
+
+    // Spawn Stage 2 Initial Review Task
+    const reviewTask: CaseTask = {
+      _id: `task-${Date.now()}-review`,
+      taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
+      caseId,
+      caseNumber,
+      stageNumber: 2,
+      workbasket: 'INTAKE_TRIAGE',
+      taskType: 'FAMILY_ELIGIBILITY_CHECK',
+      title: `Initial Review: Confirm Captured Request & HCID (${patientName})`,
+      priority: isDuplicate ? 'URGENT' : 'HIGH',
+      status: 'OPEN',
+      slaHoursRemaining: 18,
+      createdAt: new Date().toISOString(),
+    };
+    this.tasks.unshift(reviewTask);
 
     // Duplicate event
     this.appendEvent(
@@ -587,20 +639,20 @@ class ClaimsEngine {
       caseId,
       caseNumber,
       fromStage: 1,
-      toStage: currentStage,
-      stageName: stageName,
-      title: `Claim Ingested · Initialized at Stage 0${currentStage}`,
-      summary: isDuplicate
-        ? `Claim ${params.claimId} submitted with a duplicate collision flag. It has been routed to the Intake & Triage Workbasket for Analyst exception review.`
-        : `Claim ${params.claimId} ingested successfully. Family policy and member eligibility verified. Routed to Evidence & DCN Audit queue.`,
+      toStage: 2,
+      stageName: 'Stage 02: Initial Review',
+      title: `Request Captured · Case Advanced to Stage 02 (Initial Review)`,
+      summary: `Claim request captured for patient ${patientName} (${resolvedHcid}). Routed to Stage 02 Initial Review queue for details verification.`,
       actor: {
         name: USER_PERSONAS[this.currentRole].name,
         role: this.currentRole,
       },
       timestamp: new Date().toISOString(),
       details: {
-        reserve: isDuplicate ? 0 : totalAllowable,
-        actionTaken: 'Claim Ingested',
+        reserve: totalAllowable,
+        actionTaken: 'Request Captured',
+        newTaskId: reviewTask.taskId,
+        newTaskTitle: reviewTask.title,
       },
     };
 
@@ -1071,6 +1123,86 @@ class ClaimsEngine {
     this.persist();
   }
 
+  /**
+   * STAGE 2: Confirm Initial Review and advance to Stage 3 Claim & Auth Evidence
+   */
+  public confirmInitialReview(caseId: string, notes?: string) {
+    const targetCase = this.cases.find((c) => c._id === caseId);
+    if (!targetCase) return;
+
+    // Complete Initial Review task
+    const reviewTask = this.tasks.find(
+      (t) =>
+        t.caseId === caseId &&
+        (t.taskType === 'FAMILY_ELIGIBILITY_CHECK' || t.title.toLowerCase().includes('initial review')) &&
+        t.status !== 'COMPLETED'
+    );
+    if (reviewTask) {
+      reviewTask.status = 'COMPLETED';
+      reviewTask.resolvedAt = new Date().toISOString();
+      reviewTask.resolutionNotes = notes || 'Initial review confirmed via Open Review Screen.';
+    }
+
+    // Advance Stage 2 -> Stage 3 (Claim & Auth Evidence)
+    targetCase.currentStage = 3;
+    targetCase.stageName = 'CLAIM_AUTH_EVIDENCE';
+    targetCase.status = 'PENDING_EVIDENCE';
+    targetCase.assignedWorkbasket = 'EVIDENCE_DEFICIENCY';
+
+    // Spawn deficiency tasks for missing documents if any
+    targetCase.missingDocumentTypes.forEach((docType) => {
+      const hasTask = this.tasks.some(
+        (t) => t.caseId === targetCase._id && t.requiredDocType === docType
+      );
+      if (!hasTask) {
+        const defTask: CaseTask = {
+          _id: `task-${Date.now()}-${docType}`,
+          taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
+          caseId: targetCase._id,
+          caseNumber: targetCase.caseNumber,
+          stageNumber: 3,
+          workbasket: 'EVIDENCE_DEFICIENCY',
+          taskType: 'MISSING_DCN_RESOLUTION',
+          title: `Collect Verified ${docType.replace('_', ' ')} DCN`,
+          priority: 'HIGH',
+          status: 'OPEN',
+          requiredDocType: docType,
+          slaHoursRemaining: 24,
+          createdAt: new Date().toISOString(),
+        };
+        this.tasks.unshift(defTask);
+      }
+    });
+
+    this.appendEvent(
+      targetCase._id,
+      targetCase.caseNumber,
+      'STAGE_ADVANCED',
+      `Stage 02 Initial Review confirmed by ${USER_PERSONAS[this.currentRole].name}. Case advanced to Stage 03 (Claim & Auth Evidence).`,
+      { fromStage: 2, toStage: 3, notes }
+    );
+
+    this.lastStageFeedback = {
+      caseId: targetCase._id,
+      caseNumber: targetCase.caseNumber,
+      fromStage: 2,
+      toStage: 3,
+      stageName: 'Stage 03: Claim & Auth Evidence',
+      title: 'Initial Review Confirmed · Advanced to Stage 03',
+      summary: `Request details, subscriber HCID, and provider credentials verified. Case advanced to Stage 03 Claim & Auth Evidence.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        actionTaken: 'Initial Review Confirmed',
+      },
+    };
+
+    this.persist();
+  }
+
   // --- MongoDB BSON Explorer & Mongoose Schemas ---
   public getMongoCollections() {
     return [
@@ -1230,5 +1362,7 @@ export function useClaimsStore() {
     lastStageFeedback: claimsEngine.getLastStageFeedback(),
     clearStageFeedback: claimsEngine.clearStageFeedback.bind(claimsEngine),
     triggerStageFeedback: claimsEngine.triggerStageFeedback.bind(claimsEngine),
+    searchMembersByHcid: claimsEngine.searchMembersByHcid.bind(claimsEngine),
+    confirmInitialReview: claimsEngine.confirmInitialReview.bind(claimsEngine),
   };
 }
