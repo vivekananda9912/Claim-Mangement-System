@@ -48,11 +48,13 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
     policies,
     customers,
     currentRole,
+    setRole,
     uploadEvidence,
     verifyEvidence,
     updateTaskStatus,
     settleAndCloseCase,
     resolveDuplicateHold,
+    advanceToDecisionStage,
   } = useClaimsStore();
 
   const [activeTab, setActiveTab] = useState<
@@ -224,10 +226,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
               <FileCheck className="w-5 h-5 text-blue-600 shrink-0" />
               <div>
                 <span className="font-bold text-blue-900 block">
-                  Stage 02 Initial Review: Confirm Captured Request & Member HCID
+                  Stage 02 Initial Review: Confirm Request, Modify Member & Edit Claim Services
                 </span>
                 <span className="text-blue-800 text-[11px]">
-                  Confirm member HCID, household dependents, coverage financials, and provider credentials before adding claim & auth evidence.
+                  Confirm member HCID, household dependents, coverage financials, and add/remove service line items before proceeding.
                 </span>
               </div>
             </div>
@@ -247,21 +249,33 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
               <FileText className="w-5 h-5 text-amber-600 shrink-0" />
               <div>
                 <span className="font-bold text-amber-900 block">
-                  Stage 03 Claim & Auth Evidence: Missing Legal DCN Documents
+                  Stage 03 Claim & Auth Evidence: Supporting Legal DCN Documents
                 </span>
                 <span className="text-amber-800 text-[11px]">
                   {activeCase.missingDocumentTypes.length > 0
-                    ? `Missing ${activeCase.missingDocumentTypes.join(', ')}. Upload & verify DCNs to advance to Decision Stage.`
-                    : 'Claim items and authorizations logged. Upload additional evidence or proceed.'}
+                    ? `Missing ${activeCase.missingDocumentTypes.join(', ')}. Upload DCN evidence or advance to create Doctor Decision task.`
+                    : 'Claim items and authorizations logged. Ready to dispatch task to Doctor for Stage 04 Decision.'}
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => setActiveTab('evidences')}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors"
-            >
-              Open Evidence DCN Vault
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setActiveTab('evidences')}
+                className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-bold rounded-lg text-xs cursor-pointer shadow-2xs transition-colors"
+              >
+                Evidence Vault
+              </button>
+              <button
+                onClick={() => {
+                  advanceToDecisionStage(activeCase._id);
+                  setActiveTab('overview');
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                <span>Advance to Stage 04 (Doctor Decision)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -271,25 +285,45 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
               <Stethoscope className="w-5 h-5 text-purple-600 shrink-0" />
               <div>
                 <span className="font-bold text-purple-900 block">
-                  Stage 04 Decision Stage: Doctor Adjudication & Medical Necessity Review
+                  Stage 04 Decision Stage: Doctor Review Task Assigned (Dr. Sarah Chen, MD)
                 </span>
                 <span className="text-purple-800 text-[11px]">
-                  Decision pending on medical necessity, CPT code reclassifications, and loss reserve authorization.
+                  Only Doctor can make the decision. Case cannot proceed forward until the doctor review task is adjudicated.
                 </span>
               </div>
             </div>
-            {tasks.some((t) => t.taskType === 'DOCTOR_CLINICAL_REVIEW') && onOpenTask && (
-              <button
-                onClick={() => {
-                  const t = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
-                  if (t) onOpenTask(t._id);
-                }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
-              >
-                <span>Open Decision Workbench</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              {currentRole === 'DOCTOR_APPROVER' ? (
+                <button
+                  onClick={() => {
+                    const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                    if (docTask && onOpenTask) {
+                      onOpenTask(docTask._id);
+                    }
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  <span>Adjudicate Decision Task</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setRole('DOCTOR_APPROVER');
+                    const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                    if (docTask && onOpenTask) {
+                      onOpenTask(docTask._id);
+                    }
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  <span>Switch to Doctor & Adjudicate Decision</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -1022,6 +1056,10 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
         <OpenReviewModal
           caseId={activeCase._id}
           onClose={() => setShowOpenReviewModal(false)}
+          onConfirmed={() => {
+            setShowOpenReviewModal(false);
+            setActiveTab('evidences');
+          }}
         />
       )}
 

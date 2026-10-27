@@ -20,6 +20,7 @@ import {
   DcnDocumentType,
   WorkbasketId,
   StageFeedback,
+  CareCategory,
 } from '../types';
 import {
   USER_PERSONAS,
@@ -515,23 +516,7 @@ class ClaimsEngine {
       }
     );
 
-    // Spawn Stage 2 Initial Review Task
-    const reviewTask: CaseTask = {
-      _id: `task-${Date.now()}-review`,
-      taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-      caseId,
-      caseNumber,
-      stageNumber: 2,
-      workbasket: 'INTAKE_TRIAGE',
-      taskType: 'FAMILY_ELIGIBILITY_CHECK',
-      title: `Initial Review: Confirm Captured Request & HCID (${patientName})`,
-      priority: isDuplicate ? 'URGENT' : 'HIGH',
-      status: 'OPEN',
-      slaHoursRemaining: 18,
-      createdAt: new Date().toISOString(),
-    };
-    this.tasks.unshift(reviewTask);
-
+    // Natural Analyst Flow: No artificial tasks created for Stage 1 or Stage 2
     // Duplicate event
     this.appendEvent(
       caseId,
@@ -544,32 +529,6 @@ class ClaimsEngine {
         details: dupResult.details,
       }
     );
-
-    // Spawn Duplicate Task if flagged
-    if (isDuplicate) {
-      const dupTask: CaseTask = {
-        _id: `task-${Date.now()}-dup`,
-        taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-        caseId,
-        caseNumber,
-        stageNumber: 2,
-        workbasket: 'INTAKE_TRIAGE',
-        taskType: 'DUPLICATE_CLAIM_CHECK',
-        title: `Resolve Duplicate Claim Collision: ${params.claimId}`,
-        priority: 'URGENT',
-        status: 'OPEN',
-        slaHoursRemaining: 6,
-        createdAt: new Date().toISOString(),
-      };
-      this.tasks.unshift(dupTask);
-      this.appendEvent(
-        caseId,
-        caseNumber,
-        'TASK_SPAWNED',
-        `Duplicate Exception task spawned in Intake & Triage basket.`,
-        { taskId: dupTask.taskId }
-      );
-    }
 
     // Attach initial evidence if supplied
     if (params.initialEvidenceFileName) {
@@ -596,35 +555,6 @@ class ClaimsEngine {
         `Document Control Number generated: ${dcnId} (${docType}).`,
         { dcnId, fileName: params.initialEvidenceFileName }
       );
-    }
-
-    // Spawn deficiency tasks for missing docs
-    if (missingDocs.length > 0) {
-      missingDocs.forEach((docType) => {
-        const task: CaseTask = {
-          _id: `task-${Date.now()}-${docType}`,
-          taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-          caseId,
-          caseNumber,
-          stageNumber: 3,
-          workbasket: 'EVIDENCE_DEFICIENCY',
-          taskType: 'MISSING_DCN_RESOLUTION',
-          title: `Collect Verified ${docType.replace('_', ' ')} DCN`,
-          priority: 'HIGH',
-          status: 'OPEN',
-          requiredDocType: docType,
-          slaHoursRemaining: 24,
-          createdAt: new Date().toISOString(),
-        };
-        this.tasks.unshift(task);
-        this.appendEvent(
-          caseId,
-          caseNumber,
-          'TASK_SPAWNED',
-          `Deficiency gating task spawned for missing ${docType}.`,
-          { taskId: task.taskId, docType }
-        );
-      });
     }
 
     // Run Fraud Scoring
@@ -693,9 +623,7 @@ class ClaimsEngine {
       timestamp: new Date().toISOString(),
       details: {
         reserve: totalAllowable,
-        actionTaken: 'Request Captured',
-        newTaskId: reviewTask.taskId,
-        newTaskTitle: reviewTask.title,
+        actionTaken: 'Request Captured & Initial Review Opened',
       },
     };
 
@@ -1167,13 +1095,124 @@ class ClaimsEngine {
   }
 
   /**
+   * STAGE 2: Add / Remove Claim Service Line Items & Modify Patient Member
+   */
+  public updateClaimServicesAndMember(params: {
+    caseId: string;
+    patientMemberId?: string;
+    patientHcid?: string;
+    patientName?: string;
+    items?: Array<{
+      itemId?: string;
+      code: string;
+      description: string;
+      billedAmount: number;
+      category?: CareCategory;
+      startDate?: string;
+    }>;
+  }): { success: boolean; message: string } {
+    const targetCase = this.cases.find((c) => c._id === params.caseId);
+    const claim = this.claims.find((c) => c.caseId === params.caseId);
+    const policy = this.policies.find((p) => p.policyNumber === targetCase?.familyPolicyNumber);
+    if (!targetCase || !claim || !policy) {
+      return { success: false, message: 'Case, claim, or policy not found' };
+    }
+
+    if (params.patientMemberId) targetCase.patientMemberId = params.patientMemberId;
+    if (params.patientHcid) targetCase.patientHcid = params.patientHcid;
+    if (params.patientName) {
+      targetCase.patientName = params.patientName;
+      targetCase.title = `${targetCase.claimType === 'PRE_SERVICE' ? 'Pre-Service' : 'Post-Service'} ${targetCase.category} Claim - ${params.patientName}`;
+    }
+
+    if (params.items && params.items.length > 0) {
+      const updatedItems = params.items.map((i, idx) => {
+        const allowable = Math.min(i.billedAmount, Math.round(i.billedAmount * 0.75));
+        const copay = policy.coverages.find((c) => c.category === targetCase.category)?.copay || 30;
+        const coinsurance = Math.round((allowable - copay) * 0.2);
+        const eligiblePayout = Math.max(0, allowable - copay - coinsurance);
+        return {
+          itemId: i.itemId || `ITM-${Date.now().toString().slice(-4)}-0${idx + 1}`,
+          code: i.code,
+          description: i.description,
+          category: i.category || targetCase.category,
+          startDate: i.startDate || claim.serviceDate,
+          billedAmount: i.billedAmount,
+          allowableAmount: allowable,
+          copay,
+          coinsurance,
+          eligiblePayout,
+          clinicalDecision: 'PENDING' as const,
+        };
+      });
+
+      claim.items = updatedItems;
+      const totalBilled = updatedItems.reduce((acc, i) => acc + i.billedAmount, 0);
+      const totalAllowable = updatedItems.reduce((acc, i) => acc + i.allowableAmount, 0);
+      const totalCopay = updatedItems.reduce((acc, i) => acc + i.copay, 0);
+      const totalCoinsurance = updatedItems.reduce((acc, i) => acc + i.coinsurance, 0);
+      const netPayout = Math.max(0, totalAllowable - totalCopay - totalCoinsurance);
+
+      claim.totalBilledAmount = totalBilled;
+      targetCase.financials.totalBilled = totalBilled;
+      targetCase.financials.preliminaryReserve = totalAllowable;
+      targetCase.financials.allowableAmount = totalAllowable;
+      targetCase.financials.copayApplied = totalCopay;
+      targetCase.financials.coinsuranceApplied = totalCoinsurance;
+      targetCase.financials.patientResponsibility = totalCopay + totalCoinsurance;
+      targetCase.financials.netPayout = netPayout;
+    }
+
+    targetCase.updatedAt = new Date().toISOString();
+
+    this.appendEvent(
+      targetCase._id,
+      targetCase.caseNumber,
+      'CLAIM_SERVICES_MODIFIED',
+      `Claim services and patient member updated by ${USER_PERSONAS[this.currentRole].name}. ${params.items ? `${params.items.length} service line(s) active ($${targetCase.financials.totalBilled.toFixed(2)}).` : ''}`,
+      {
+        patientName: targetCase.patientName,
+        patientHcid: targetCase.patientHcid,
+        totalBilled: targetCase.financials.totalBilled,
+      }
+    );
+
+    this.persist();
+    return { success: true, message: 'Services and patient member updated successfully.' };
+  }
+
+  /**
    * STAGE 2: Confirm Initial Review and advance to Stage 3 Claim & Auth Evidence
    */
-  public confirmInitialReview(caseId: string, notes?: string) {
+  public confirmInitialReview(
+    caseId: string,
+    notes?: string,
+    updatedData?: {
+      patientMemberId?: string;
+      patientHcid?: string;
+      patientName?: string;
+      items?: Array<{
+        code: string;
+        description: string;
+        billedAmount: number;
+        category?: CareCategory;
+      }>;
+    }
+  ) {
     const targetCase = this.cases.find((c) => c._id === caseId);
     if (!targetCase) return;
 
-    // Complete Initial Review task
+    if (updatedData) {
+      this.updateClaimServicesAndMember({
+        caseId,
+        patientMemberId: updatedData.patientMemberId,
+        patientHcid: updatedData.patientHcid,
+        patientName: updatedData.patientName,
+        items: updatedData.items,
+      });
+    }
+
+    // Complete Initial Review task if any
     const reviewTask = this.tasks.find(
       (t) =>
         t.caseId === caseId &&
@@ -1191,31 +1230,6 @@ class ClaimsEngine {
     targetCase.stageName = 'CLAIM_AUTH_EVIDENCE';
     targetCase.status = 'PENDING_EVIDENCE';
     targetCase.assignedWorkbasket = 'EVIDENCE_DEFICIENCY';
-
-    // Spawn deficiency tasks for missing documents if any
-    targetCase.missingDocumentTypes.forEach((docType) => {
-      const hasTask = this.tasks.some(
-        (t) => t.caseId === targetCase._id && t.requiredDocType === docType
-      );
-      if (!hasTask) {
-        const defTask: CaseTask = {
-          _id: `task-${Date.now()}-${docType}`,
-          taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-          caseId: targetCase._id,
-          caseNumber: targetCase.caseNumber,
-          stageNumber: 3,
-          workbasket: 'EVIDENCE_DEFICIENCY',
-          taskType: 'MISSING_DCN_RESOLUTION',
-          title: `Collect Verified ${docType.replace('_', ' ')} DCN`,
-          priority: 'HIGH',
-          status: 'OPEN',
-          requiredDocType: docType,
-          slaHoursRemaining: 24,
-          createdAt: new Date().toISOString(),
-        };
-        this.tasks.unshift(defTask);
-      }
-    });
 
     this.appendEvent(
       targetCase._id,
@@ -1240,6 +1254,82 @@ class ClaimsEngine {
       timestamp: new Date().toISOString(),
       details: {
         actionTaken: 'Initial Review Confirmed',
+      },
+    };
+
+    this.persist();
+  }
+
+  /**
+   * STAGE 3 -> 4: Advance Case to Stage 4 (Decision Stage) and spawn Doctor Clinical Review Task
+   * Requirement: Only in decision stage should a task be created; case cannot advance to closeout without doctor review
+   */
+  public advanceToDecisionStage(caseId: string, notes?: string) {
+    const targetCase = this.cases.find((c) => c._id === caseId);
+    if (!targetCase) return;
+
+    targetCase.currentStage = 4;
+    targetCase.stageName = 'CLINICAL_FRAUD_ADJUDICATION';
+    targetCase.status = 'PENDING_CLINICAL';
+    targetCase.assignedWorkbasket = 'CLINICAL_REVIEW';
+    targetCase.assignedDoctorId = 'DOC-DR-CHEN';
+
+    // Spawn Doctor Review Task strictly at Decision Stage
+    const hasDocTask = this.tasks.some(
+      (t) => t.caseId === targetCase._id && t.taskType === 'DOCTOR_CLINICAL_REVIEW'
+    );
+    if (!hasDocTask) {
+      const docTask: CaseTask = {
+        _id: `task-${Date.now()}-doc`,
+        taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
+        caseId: targetCase._id,
+        caseNumber: targetCase.caseNumber,
+        stageNumber: 4,
+        workbasket: 'CLINICAL_REVIEW',
+        taskType: 'DOCTOR_CLINICAL_REVIEW',
+        title: `Doctor Clinical Necessity Decision: ${targetCase.claimId}`,
+        priority: targetCase.priority,
+        status: 'OPEN',
+        assignedTo: {
+          userId: 'usr_dr_chen',
+          name: 'Dr. Sarah Chen, MD',
+          role: 'DOCTOR_APPROVER',
+        },
+        slaHoursRemaining: 36,
+        createdAt: new Date().toISOString(),
+      };
+      this.tasks.unshift(docTask);
+    }
+
+    const activeDocTask = this.tasks.find(
+      (t) => t.caseId === targetCase._id && t.taskType === 'DOCTOR_CLINICAL_REVIEW'
+    );
+
+    this.appendEvent(
+      targetCase._id,
+      targetCase.caseNumber,
+      'STAGE_ADVANCED',
+      `Case advanced to Stage 04 (Decision Stage). Clinical decision task spawned for Dr. Sarah Chen, MD.`,
+      { fromStage: 3, toStage: 4, taskId: activeDocTask?.taskId }
+    );
+
+    this.lastStageFeedback = {
+      caseId: targetCase._id,
+      caseNumber: targetCase.caseNumber,
+      fromStage: 3,
+      toStage: 4,
+      stageName: 'Stage 04: Decision Stage',
+      title: 'Advanced to Stage 04 Decision Stage · Doctor Task Created',
+      summary: `Case routed to Clinical Decision. Formal adjudication task (${activeDocTask?.taskId}) has been dispatched for Dr. Sarah Chen, MD.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        newTaskId: activeDocTask?.taskId,
+        newTaskTitle: activeDocTask?.title,
+        actionTaken: 'Advanced to Decision Stage',
       },
     };
 
@@ -1407,5 +1497,7 @@ export function useClaimsStore() {
     triggerStageFeedback: claimsEngine.triggerStageFeedback.bind(claimsEngine),
     searchMembersByHcid: claimsEngine.searchMembersByHcid.bind(claimsEngine),
     confirmInitialReview: claimsEngine.confirmInitialReview.bind(claimsEngine),
+    updateClaimServicesAndMember: claimsEngine.updateClaimServicesAndMember.bind(claimsEngine),
+    advanceToDecisionStage: claimsEngine.advanceToDecisionStage.bind(claimsEngine),
   };
 }

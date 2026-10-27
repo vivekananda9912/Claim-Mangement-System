@@ -45,10 +45,12 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Step 1: Member HCID Service Search
-  const [searchQuery, setSearchQuery] = useState<string>('HCID-8492-1001-A');
+  // Step 1: Member HCID Service Search (results do NOT show until user explicitly clicks lookup)
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [serviceStatus, setServiceStatus] = useState<string>('Connected · Master Eligibility Directory (EDI 270/271)');
+  const [serviceStatus, setServiceStatus] = useState<string>(
+    'Ready · Enter unique Healthcare ID (HCID) or select a preset and click "Call Lookup Service"'
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
@@ -82,13 +84,16 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
   const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
   const [createdCaseNumber, setCreatedCaseNumber] = useState<string | null>(null);
 
-  // Execute Simulated Service Lookup
-  // Execute Real / Simulated Service Lookup
+  // Execute Simulated / Real Service Lookup (only called upon clicking Lookup or Preset)
   const executeServiceSearch = async (query: string) => {
+    const cleanQuery = (query || '').trim();
+    if (!cleanQuery) {
+      setServiceStatus('Please enter an HCID, Member Name, or Policy Number before calling lookup.');
+      return;
+    }
+
     setIsSearching(true);
     setServiceStatus('Querying National Healthcare Eligibility Service (GET /v2/eligibility/subscribers)...');
-
-    const cleanQuery = (query || '').trim();
 
     // 1. Try real backend microservice API (if server is listening)
     try {
@@ -134,18 +139,23 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
           };
 
           setSelectedCustomer(mappedCust);
+          // Auto-select patient member if specific member was searched, else let user click
           const targetMem =
-            mappedCust.primarySubscriber.hcid === match.hcid
+            mappedCust.primarySubscriber.hcid.toLowerCase() === match.hcid.toLowerCase()
               ? mappedCust.primarySubscriber
-              : mappedCust.dependents.find((d) => d.hcid === match.hcid) ||
-                (mappedCust.dependents.length > 0 ? mappedCust.dependents[0] : mappedCust.primarySubscriber);
+              : mappedCust.dependents.find((d) => d.hcid.toLowerCase() === match.hcid.toLowerCase()) || null;
 
           setSelectedMember(targetMem);
-          const pol = policies.find((p) => p.policyNumber === household.familyPolicyNumber) ||
-                      INITIAL_POLICIES.find((p) => p.policyNumber === household.familyPolicyNumber) || null;
-          setSelectedPolicy(pol);
+          if (targetMem) {
+            const pol = policies.find((p) => p.policyNumber === household.familyPolicyNumber) ||
+                        INITIAL_POLICIES.find((p) => p.policyNumber === household.familyPolicyNumber) || null;
+            setSelectedPolicy(pol);
+          } else {
+            setSelectedPolicy(null);
+          }
+
           setServiceStatus(
-            `200 OK · NHIC Live Registry: Master Unit ${household.familyHcid} (${household.subscribers.length} covered subscribers)`
+            `200 OK · NHIC Live Registry: Master Unit ${household.familyHcid} (${household.subscribers.length} covered subscribers). Click a member to view policy.`
           );
           setIsSearching(false);
           return;
@@ -180,21 +190,28 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
       });
     }
 
-    // 4. If direct match found, select it
+    // 4. If direct match found, select customer
     if (results.length > 0) {
       const cust = results[0];
       setSelectedCustomer(cust);
-      // Select dependent matching query or primary subscriber
-      const matchedDep = cust.dependents.find((d) => {
-        const q = cleanQuery.toLowerCase();
-        return d.hcid.toLowerCase().includes(q) || d.firstName.toLowerCase().includes(q) || d.lastName.toLowerCase().includes(q);
-      });
-      const mem = matchedDep || (cust.dependents.length > 0 ? cust.dependents[0] : cust.primarySubscriber);
+      const q = cleanQuery.toLowerCase();
+      const matchedDep = cust.dependents.find(
+        (d) => d.hcid.toLowerCase().includes(q) || `${d.firstName} ${d.lastName}`.toLowerCase().includes(q)
+      );
+      const matchedPrimary =
+        cust.primarySubscriber.hcid.toLowerCase().includes(q) ||
+        `${cust.primarySubscriber.firstName} ${cust.primarySubscriber.lastName}`.toLowerCase().includes(q);
+
+      const mem = matchedDep || (matchedPrimary ? cust.primarySubscriber : null);
       setSelectedMember(mem);
-      const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) ||
-                  INITIAL_POLICIES.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
-      setSelectedPolicy(pol);
-      setServiceStatus(`200 OK · Master Directory Match: ${cust.familyHcid} (${cust.dependents.length + 1} subscribers: Primary, Spouse, Child, Parent)`);
+      if (mem) {
+        const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) ||
+                    INITIAL_POLICIES.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
+        setSelectedPolicy(pol);
+      } else {
+        setSelectedPolicy(null);
+      }
+      setServiceStatus(`200 OK · Master Directory Match: ${cust.familyHcid} (${cust.dependents.length + 1} subscribers). Click a member to see policy.`);
     } else {
       // 5. If query was completely unrecognizable, default to Vance family so user is never blocked
       const defaultCust = INITIAL_CUSTOMERS[0];
@@ -206,15 +223,12 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
     setIsSearching(false);
   };
 
-  // Initial lookup on mount
-  useEffect(() => {
-    executeServiceSearch('HCID-8492-1001-A');
-  }, []);
-
+  // DO NOT auto-search on mount - results only come when user clicks lookup
   const handleMemberSelect = (cust: Customer, member: FamilyMember) => {
     setSelectedCustomer(cust);
     setSelectedMember(member);
-    const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
+    const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) ||
+                INITIAL_POLICIES.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
     setSelectedPolicy(pol);
   };
 
@@ -253,7 +267,8 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
     if (result.success) {
       setCreatedCaseId(result.caseId);
       setCreatedCaseNumber(result.caseNumber);
-      setStep(4);
+      // Automatically transition to the next stage screen (Stage 02 Initial Review)
+      onCaseCreated(result.caseId);
     }
   };
 
