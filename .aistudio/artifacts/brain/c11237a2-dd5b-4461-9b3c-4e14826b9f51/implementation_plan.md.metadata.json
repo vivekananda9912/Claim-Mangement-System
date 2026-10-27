@@ -1,0 +1,6 @@
+{
+  "summary":  "OmniClaim Health enterprise blueprint: Stage reordering (Stage 1: Policy Eligibility, Stage 2: Claim Intake), Auth & RBAC Credentials with `users` collection, Comprehensive REST API Specification, ready-to-implement Mongoose DB Schemas, and Printable Architecture Document.",
+  "updatedAt":  "2026-10-26T16:36:04.607906054Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

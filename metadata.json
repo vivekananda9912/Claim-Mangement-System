@@ -1,0 +1,6 @@
+{
+  "name": "OmniClaim Health - Enterprise Claims & Case Orchestration",
+  "description": "Enterprise healthcare claims case management engine with MongoDB event-sourcing, workbasket task routing, duplicate check, fraud scoring, DCN evidence audit, and clinical doctor adjudication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

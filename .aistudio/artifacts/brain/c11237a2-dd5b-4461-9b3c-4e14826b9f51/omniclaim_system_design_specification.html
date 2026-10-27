@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniClaim Health - Enterprise System Design & Database Specification</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --accent: #0284c7;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --success: #15803d;
+      --warning: #b45309;
+      --danger: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--slate-800);
+      background-color: var(--slate-50);
+      line-height: 1.6;
+      font-size: 14px;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-radius: 8px;
+      padding: 48px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--slate-900);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    .brand-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 14px;
+      color: var(--slate-600);
+      margin-top: 4px;
+    }
+
+    .print-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .print-btn:hover {
+      background: var(--primary-light);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin: 36px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 24px 0 12px 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: var(--slate-700);
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .stage-card {
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: 16px;
+      background: var(--slate-50);
+    }
+
+    .stage-num {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stage-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .stage-desc {
+      font-size: 12px;
+      color: var(--slate-600);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 28px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--slate-200);
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--slate-100);
+      color: var(--slate-900);
+      font-weight: 600;
+    }
+
+    td.code, code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #0369a1;
+      background: #f0f9ff;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 12px 0 20px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        font-size: 11pt;
+      }
+      .container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .print-btn {
+        display: none;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      pre {
+        background: #f8fafc;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <div>
+        <h1 class="brand-title">OmniClaim Health</h1>
+        <div class="brand-sub">Enterprise System Design, MongoDB Schema Specification & REST API Blueprints</div>
+      </div>
+      <button class="print-btn" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Print / Save to PDF
+      </button>
+    </div>
+
+    <h2>1. Executive Summary & Architecture Overview</h2>
+    <p>
+      OmniClaim Health is an enterprise-grade healthcare claims adjudication engine engineered on an immutable event-sourcing foundation. The platform coordinates complex multi-care claims (Medical, Pharmacy, Prescription, and Behavioral Health) under a cohesive <strong>Case</strong> aggregate using <strong>Tasks</strong> and <strong>Workbaskets</strong>.
+    </p>
+
+    <div class="stage-grid">
+      <div class="stage-card">
+        <div class="stage-num">Stage 01</div>
+        <div class="stage-title">Policy & Eligibility</div>
+        <div class="stage-desc">Verifies family policy active window, patient member status, remaining family deductibles, and category caps.</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">Stage 02</div>
+        <div class="stage-title">Claim Intake & Ingestion</div>
+        <div class="stage-desc">Ingests CPT/Rx procedure lines and executes exact and composite duplicate detection engines.</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">Stage 03</div>
+        <div class="stage-title">Evidence & DCN Audit</div>
+        <div class="stage-desc">Mints legal Document Control Numbers (DCN) for superbills and chart notes; enforces deficiency gating.</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">Stage 04</div>
+        <div class="stage-title">Clinical & Fraud Adjudication</div>
+        <div class="stage-desc">Scores fraud risk; licensed physician reviewers evaluate medical necessity and reclassify procedure codes.</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">Stage 05</div>
+        <div class="stage-title">Settlement & Disbursement</div>
+        <div class="stage-desc">Computes allowable fees, applies deductibles and coinsurance, adjusts preliminary reserves, and authorizes vouchers.</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-num">Stage 06</div>
+        <div class="stage-title">Closed & Archived</div>
+        <div class="stage-desc">Seals case history, archives all DCN artifacts, and retains the complete immutable event replay stream.</div>
+      </div>
+    </div>
+
+    <h2>2. Authentication, Session Management & Backend User Identification</h2>
+    <p>
+      OmniClaim Health implements an enterprise <strong>JWT (JSON Web Token) + RBAC (Role-Based Access Control)</strong> authentication engine. Every incoming request must present a signed Bearer token in the HTTP <code>Authorization</code> header. The backend <code>authenticateJWT</code> middleware cryptographically verifies the token and mounts the user's verified identity directly onto Express's <code>req.user</code> context. Audit events in <code>case_events</code> extract the actor identity strictly from <code>req.user</code>, preventing client-side spoofing.
+    </p>
+
+    <h3>Authentication & Cryptographic Identification Flow</h3>
+    <pre>
+1. POST /api/auth/login { username, password }
+2. Backend queries 'users' collection -> validates bcrypt.compare(password, user.passwordHash)
+3. Backend mints JWT: jwt.sign({ sub, userId, role, workbaskets, doctorProfileId }, JWT_SECRET, { expiresIn: '8h' })
+4. Client sends: Authorization: Bearer &lt;JWT&gt; on all subsequent requests
+5. Middleware authenticateJWT: jwt.verify(token) -> mounts req.user = decoded
+6. Route Guards: requireRole('DOCTOR_APPROVER'), requireWorkbasket('CLINICAL_REVIEW')
+7. Audit Attribution: 'case_events' records actor: { userId: req.user.userId, name: req.user.fullName, role: req.user.role }</pre>
+
+    <h3>Enterprise Pre-Seeded Credentials</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Role Persona</th>
+          <th>Username</th>
+          <th>Initial Password</th>
+          <th>Assigned Workbaskets</th>
+          <th>Core Privileges</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Business Requester</strong></td>
+          <td class="code">requester@omniclaim.internal</td>
+          <td class="code">RequesterPass2026!</td>
+          <td>INTAKE_SUBMISSION</td>
+          <td>Policy lookup, claim line intake, DCN file uploads, deficiency response.</td>
+        </tr>
+        <tr>
+          <td><strong>Process Owner</strong></td>
+          <td class="code">process.owner@omniclaim.internal</td>
+          <td class="code">ProcessOwner2026!</td>
+          <td>INTAKE, EVIDENCE_DEFICIENCY</td>
+          <td>Workbasket triage, duplicate resolution, DCN audit, milestone stage progression.</td>
+        </tr>
+        <tr>
+          <td><strong>Doctor Approver</strong></td>
+          <td class="code">doctor.chen@omniclaim.internal</td>
+          <td class="code">DoctorChen2026!</td>
+          <td>CLINICAL_REVIEW, SETTLEMENT</td>
+          <td>Medical necessity evaluation, procedure reclassification, clinical sign-off.</td>
+        </tr>
+        <tr>
+          <td><strong>Operations Analyst</strong></td>
+          <td class="code">analyst@omniclaim.internal</td>
+          <td class="code">AnalystPass2026!</td>
+          <td>FRAUD_SIU, AUDIT_METRICS</td>
+          <td>Fraud score decomposition, audit logs, SLA monitoring, KPI reports.</td>
+        </tr>
+        <tr>
+          <td><strong>System Admin</strong></td>
+          <td class="code">admin@omniclaim.internal</td>
+          <td class="code">AdminSuper2026!</td>
+          <td>ALL_WORKBASKETS</td>
+          <td>BSON document explorer, Mongoose schema exporter, benefit tables, rule engine.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>3. Complete MongoDB Database Design (10 Collections)</h2>
+
+    <h3>1. users (RBAC & Authentication)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "userId": "usr_dr_chen",
+  "username": "sarah.chen@omniclaim.internal",
+  "passwordHash": "$2b$12$e8YQz.9kQ1... (bcrypt)",
+  "fullName": "Dr. Sarah Chen, MD",
+  "role": "DOCTOR_APPROVER",
+  "authorizedWorkbaskets": ["CLINICAL_REVIEW", "SETTLEMENT"],
+  "doctorProfileId": "DOC-DR-CHEN",
+  "status": "ACTIVE"
+}</pre>
+
+    <h3>2. customers (Family Subscriber Master)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "familyPolicyNumber": "FAM-98234-MED",
+  "primarySubscriber": {
+    "memberId": "MEM-001",
+    "firstName": "Eleanor",
+    "lastName": "Vance",
+    "dob": "1984-06-12",
+    "relationship": "PRIMARY"
+  },
+  "dependents": [
+    { "memberId": "MEM-002", "firstName": "Leo", "lastName": "Vance", "dob": "2012-09-03", "relationship": "CHILD" }
+  ],
+  "contact": { "email": "e.vance@example.com", "phone": "+1-555-0192" },
+  "status": "ACTIVE"
+}</pre>
+
+    <h3>3. policies (Coverage & Benefit Schedules)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "policyNumber": "FAM-98234-MED",
+  "planName": "OmniHealth Comprehensive Gold PPO",
+  "effectiveDate": ISODate("2026-01-01"),
+  "expirationDate": ISODate("2026-12-31"),
+  "familyFinancials": {
+    "annualDeductible": 3000.00,
+    "deductibleMetToDate": 1250.00,
+    "outOfPocketMax": 8000.00,
+    "outOfPocketMetToDate": 2400.00
+  },
+  "categoryCoverages": [
+    { "category": "MEDICAL", "copay": 35.00, "coinsurancePercentage": 20, "maxBenefit": 1000000.00 },
+    { "category": "PHARMACY", "copay": 15.00, "coinsurancePercentage": 10, "maxBenefit": 250000.00 },
+    { "category": "PRESCRIPTION", "copay": 10.00, "coinsurancePercentage": 15, "maxBenefit": 100000.00 },
+    { "category": "BEHAVIORAL_HEALTH", "copay": 25.00, "coinsurancePercentage": 10, "maxBenefit": 500000.00 }
+  ],
+  "exclusions": ["CPT-99999-COSMETIC", "RX-EXPERIMENTAL-X01"],
+  "preAuthRequiredProcedures": ["CPT-70553-MRI", "CPT-29881-ARTHROSCOPY"]
+}</pre>
+
+    <h3>4. cases (Root Aggregate Container)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "caseNumber": "CASE-2026-00412",
+  "claimId": "CLM-88129",
+  "title": "Post-Service Knee Arthroscopy - Leo Vance",
+  "currentStage": 1, // 1 to 6
+  "stageName": "POLICY_ELIGIBILITY_VERIFICATION",
+  "status": "OPEN",
+  "priority": "HIGH",
+  "claimType": "POST_SERVICE",
+  "careCategory": "MEDICAL",
+  "familyPolicyNumber": "FAM-98234-MED",
+  "patientMemberId": "MEM-002",
+  "currentWorkbasket": "INTAKE",
+  "financialSummary": {
+    "totalBilled": 5250.00,
+    "allowableAmount": 3800.00,
+    "preliminaryReserve": 3800.00,
+    "patientCopay": 35.00,
+    "patientCoinsurance": 753.00,
+    "approvedPayout": 3012.00
+  }
+}</pre>
+
+    <h3>5. claims & claim_items (Clinical Procedures)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "claimId": "CLM-88129",
+  "caseId": ObjectId,
+  "provider": { "npi": "1982736450", "name": "Metropolitan Medical Center" },
+  "serviceStartDate": ISODate("2026-03-12"),
+  "items": [
+    {
+      "itemId": "ITM-01",
+      "procedureCode": "CPT-29881",
+      "description": "Knee Arthroscopy with meniscectomy",
+      "billedAmount": 4200.00,
+      "feeScheduleAllowable": 3200.00,
+      "clinicalReviewStatus": "PENDING_DOCTOR_REVIEW"
+    }
+  ],
+  "totalBilledAmount": 5250.00
+}</pre>
+
+    <h3>6. case_tasks (Workbaskets & Queue Items)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "taskId": "TSK-90214",
+  "caseId": ObjectId,
+  "stageNumber": 3,
+  "workbasket": "EVIDENCE_DEFICIENCY",
+  "title": "Collect Operative Report DCN for CPT-29881",
+  "priority": "HIGH",
+  "status": "OPEN", // OPEN | IN_PROGRESS | PENDING | RESOLVED | COMPLETED | ESCALATED
+  "assignedTo": { "userId": "usr_intake_02", "name": "David Miller", "role": "PROCESS_OWNER" },
+  "sla": { "dueAt": ISODate("2026-03-17T17:00:00Z"), "isBreached": false }
+}</pre>
+
+    <h3>7. case_evidences (Legal Document Control Numbers - DCN)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "dcnId": "DCN-2026-MED-849201",
+  "caseId": ObjectId,
+  "documentType": "OPERATIVE_NOTES",
+  "fileName": "arthroscopy_op_report_vance.pdf",
+  "fileSizeBytes": 2419200,
+  "sha256Checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "verificationStatus": "VERIFIED",
+  "verifiedBy": "usr_intake_02"
+}</pre>
+
+    <h3>8. doctor_profiles (Physician Reviewer Master)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "doctorId": "DOC-DR-CHEN",
+  "name": "Dr. Sarah Chen, MD",
+  "npi": "1487293810",
+  "specialty": "Orthopedic Surgery & Sports Medicine",
+  "activeStateLicenses": ["IL-03619284", "CA-A10982"],
+  "clinicalPrivileges": ["PROCEDURE_CODE_RECLASSIFICATION", "MEDICAL_NECESSITY_DENIAL"]
+}</pre>
+
+    <h3>9. fraud_assessments (Duplicate & Fraud Scorer)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "assessmentId": "FRD-2026-9921",
+  "caseId": ObjectId,
+  "claimId": "CLM-88129",
+  "duplicateCheck": { "isDuplicate": false, "exactClaimIdMatch": false, "compositeFingerprintMatch": false },
+  "fraudScoring": {
+    "totalRiskScore": 22,
+    "riskLevel": "LOW",
+    "requiresSiuInvestigation": false,
+    "evaluatedRules": [
+      { "ruleId": "RULE_EXCESSIVE_FEE", "triggered": false, "points": 0 },
+      { "ruleId": "RULE_UNBUNDLING", "triggered": false, "points": 0 }
+    ]
+  }
+}</pre>
+
+    <h3>10. case_events (Append-Only Event Store)</h3>
+    <pre>
+{
+  "_id": ObjectId,
+  "caseId": ObjectId,
+  "sequenceNumber": 1,
+  "eventType": "POLICY_ELIGIBILITY_VERIFIED",
+  "actor": { "userId": "usr_requester_01", "role": "BUSINESS_REQUESTER" },
+  "payload": { "familyPolicyNumber": "FAM-98234-MED", "memberId": "MEM-002" },
+  "timestamp": ISODate("2026-03-15T09:00:00Z")
+}</pre>
+
+    <div class="page-break"></div>
+
+    <h2>4. REST API Endpoint Catalog</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Endpoint</th>
+          <th>Stage / Purpose</th>
+          <th>Key Request Parameters</th>
+          <th>Event Emitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/auth/login</td>
+          <td>Auth & Session</td>
+          <td>username, password</td>
+          <td><code>USER_LOGGED_IN</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/policies/verify-eligibility</td>
+          <td>Stage 1: Policy Verification</td>
+          <td>familyPolicyNumber, patientMemberId, careCategory</td>
+          <td><code>ELIGIBILITY_CHECKED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/cases/initialize</td>
+          <td>Stage 1: Init Case</td>
+          <td>familyPolicyNumber, patientMemberId, claimType</td>
+          <td><code>CASE_INITIALIZED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/cases/:id/claims/intake</td>
+          <td>Stage 2: Claim Intake</td>
+          <td>claimId, provider NPI, diagnoses, itemized lines</td>
+          <td><code>CLAIM_INTAKE_SUBMITTED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/cases/:id/evidences</td>
+          <td>Stage 3: DCN Upload</td>
+          <td>documentType, fileName, fileSize, checksum</td>
+          <td><code>DCN_EVIDENCE_ATTACHED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-warning">PUT</span></td>
+          <td class="code">/api/cases/:id/evidences/:dcnId/verify</td>
+          <td>Stage 3: DCN Verification</td>
+          <td>verificationStatus (VERIFIED / REJECTED), notes</td>
+          <td><code>DCN_EVIDENCE_VERIFIED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/cases/:id/fraud-assessment</td>
+          <td>Stage 4: Fraud Engine</td>
+          <td>(Auto-computed from claim & provider history)</td>
+          <td><code>FRAUD_ASSESSMENT_SCORED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-warning">PUT</span></td>
+          <td class="code">/api/cases/:id/clinical-adjudication</td>
+          <td>Stage 4: Doctor Adjudication</td>
+          <td>doctorId, decision, itemAdjustments, doctorNotes</td>
+          <td><code>CLINICAL_REVIEW_COMPLETED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-primary">POST</span></td>
+          <td class="code">/api/cases/:id/settlement/authorize</td>
+          <td>Stage 5: Disbursement</td>
+          <td>approvedPayout, paymentMethod, payeeNpi</td>
+          <td><code>SETTLEMENT_AUTHORIZED</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-success">GET</span></td>
+          <td class="code">/api/workbaskets/:basket/tasks</td>
+          <td>Workbaskets</td>
+          <td>status, priority, assignedUserId</td>
+          <td>-</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>5. Implementation Boundaries & Production Hand-off</h2>
+    <p>
+      This design strictly decouples domain logic through <strong>SOLID specifications</strong>. For the 2.5-day delivery sprint, the application includes an in-app reactive MongoDB BSON engine. For enterprise production hand-off, the generated Mongoose models can be plugged directly into any Node.js/Express service connecting to MongoDB Atlas with zero schema rewrites.
+    </p>
+
+    <div style="margin-top: 40px; text-align: center; color: var(--slate-600); font-size: 12px; border-top: 1px solid var(--slate-200); padding-top: 16px;">
+      OmniClaim Health Architecture Specification &copy; 2026. Confidential & Proprietary.
+    </div>
+  </div>
+
+</body>
+</html>
