@@ -19,6 +19,7 @@ import {
   DcnVerificationStatus,
   DcnDocumentType,
   WorkbasketId,
+  StageFeedback,
 } from '../types';
 import {
   USER_PERSONAS,
@@ -50,6 +51,7 @@ class ClaimsEngine {
   private evidences: CaseEvidence[] = [...INITIAL_EVIDENCES];
   private fraudAssessments: FraudAssessment[] = [...INITIAL_FRAUD_ASSESSMENTS];
   private events: CaseEvent[] = [...INITIAL_EVENTS];
+  private lastStageFeedback: StageFeedback | null = null;
   private listeners: Set<() => void> = new Set();
 
   private duplicateRule = new DuplicateCheckRule();
@@ -127,6 +129,20 @@ class ClaimsEngine {
   public setRole(role: UserRole) {
     this.currentRole = role;
     this.persist();
+  }
+
+  public getLastStageFeedback(): StageFeedback | null {
+    return this.lastStageFeedback;
+  }
+
+  public clearStageFeedback(): void {
+    this.lastStageFeedback = null;
+    this.notify();
+  }
+
+  public triggerStageFeedback(feedback: StageFeedback): void {
+    this.lastStageFeedback = feedback;
+    this.notify();
   }
 
   public getCustomers() {
@@ -567,6 +583,27 @@ class ClaimsEngine {
       this.tasks.unshift(fraudTask);
     }
 
+    this.lastStageFeedback = {
+      caseId,
+      caseNumber,
+      fromStage: 1,
+      toStage: currentStage,
+      stageName: stageName,
+      title: `Claim Ingested · Initialized at Stage 0${currentStage}`,
+      summary: isDuplicate
+        ? `Claim ${params.claimId} submitted with a duplicate collision flag. It has been routed to the Intake & Triage Workbasket for Analyst exception review.`
+        : `Claim ${params.claimId} ingested successfully. Family policy and member eligibility verified. Routed to Evidence & DCN Audit queue.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        reserve: isDuplicate ? 0 : totalAllowable,
+        actionTaken: 'Claim Ingested',
+      },
+    };
+
     this.persist();
     return {
       success: true,
@@ -704,6 +741,31 @@ class ClaimsEngine {
           `Case advanced to Stage 4 (Clinical & Fraud Adjudication) upon DCN verification.`,
           { fromStage: 3, toStage: 4 }
         );
+
+        const activeDocTask = this.tasks.find(
+          (t) => t.caseId === targetCase._id && t.taskType === 'DOCTOR_CLINICAL_REVIEW'
+        );
+
+        this.lastStageFeedback = {
+          caseId: targetCase._id,
+          caseNumber: targetCase.caseNumber,
+          fromStage: 3,
+          toStage: 4,
+          stageName: 'Stage 4: Clinical & Fraud Adjudication',
+          title: 'Evidence Audit Complete · Advanced to Stage 04',
+          summary: `All mandatory Document Control Numbers (DCNs) have been verified. Milestone review task for Dr. Sarah Chen, MD has been dispatched to the Clinical Review Workbasket.`,
+          actor: {
+            name: USER_PERSONAS[this.currentRole].name,
+            role: this.currentRole,
+          },
+          timestamp: new Date().toISOString(),
+          details: {
+            dcnId: evidence.dcnId,
+            newTaskId: activeDocTask?.taskId,
+            newTaskTitle: activeDocTask?.title,
+            actionTaken: `Verified DCN ${evidence.dcnId}`,
+          },
+        };
       }
     }
 
@@ -845,6 +907,28 @@ class ClaimsEngine {
       { fromStage: 4, toStage: 5 }
     );
 
+    this.lastStageFeedback = {
+      caseId: targetCase._id,
+      caseNumber: targetCase.caseNumber,
+      fromStage: 4,
+      toStage: 5,
+      stageName: 'Stage 5: Settlement & Disbursement',
+      title: `Clinical Adjudication Finalized (${params.decision}) · Advanced to Stage 05`,
+      summary: `Medical necessity review completed by ${USER_PERSONAS[this.currentRole].name}. Net allowable: $${newAllowable.toFixed(2)}. Preliminary loss reserve locked at $${reserve.toFixed(2)}. Settlement voucher payment task dispatched to Finance.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        reserve,
+        netPayout: newNetPayout,
+        newTaskId: payTask?.taskId,
+        newTaskTitle: payTask?.title,
+        actionTaken: `Physician Decision: ${params.decision}`,
+      },
+    };
+
     this.persist();
   }
 
@@ -901,6 +985,25 @@ class ClaimsEngine {
       { closedAt: new Date().toISOString() }
     );
 
+    this.lastStageFeedback = {
+      caseId: targetCase._id,
+      caseNumber: targetCase.caseNumber,
+      fromStage: 5,
+      toStage: 6,
+      stageName: 'Stage 6: Closed & Archived',
+      title: 'Settlement Voucher Disbursed · Case Sealed (Stage 06)',
+      summary: `Electronic payment voucher for $${params.authorizedAmount.toFixed(2)} disbursed via ${params.paymentMethod}. Case ${targetCase.caseNumber} has been sealed into the immutable BSON event store.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        netPayout: params.authorizedAmount,
+        actionTaken: `Voucher Disbursed: $${params.authorizedAmount.toFixed(2)}`,
+      },
+    };
+
     this.persist();
   }
 
@@ -945,6 +1048,24 @@ class ClaimsEngine {
         `Duplicate exception cleared as legitimate resubmission. Advanced to Stage 3. Notes: ${notes}`,
         { action: 'CLEAR_DUPLICATE_OVERRIDE', notes }
       );
+
+      this.lastStageFeedback = {
+        caseId: targetCase._id,
+        caseNumber: targetCase.caseNumber,
+        fromStage: 2,
+        toStage: 3,
+        stageName: 'Stage 3: Evidence & DCN Audit',
+        title: 'Duplicate Hold Cleared · Case Advanced to Stage 03',
+        summary: `Collision exception cleared as legitimate resubmission. Case transitioned to Evidence Deficiencies workbasket for mandatory DCN verification.`,
+        actor: {
+          name: USER_PERSONAS[this.currentRole].name,
+          role: this.currentRole,
+        },
+        timestamp: new Date().toISOString(),
+        details: {
+          actionTaken: 'Duplicate Override Approved',
+        },
+      };
     }
 
     this.persist();
@@ -1106,5 +1227,8 @@ export function useClaimsStore() {
     getMongoCollections: claimsEngine.getMongoCollections.bind(claimsEngine),
     getMongooseSchemasCode: claimsEngine.getMongooseSchemasCode.bind(claimsEngine),
     resetToSeeds: claimsEngine.resetToSeeds.bind(claimsEngine),
+    lastStageFeedback: claimsEngine.getLastStageFeedback(),
+    clearStageFeedback: claimsEngine.clearStageFeedback.bind(claimsEngine),
+    triggerStageFeedback: claimsEngine.triggerStageFeedback.bind(claimsEngine),
   };
 }

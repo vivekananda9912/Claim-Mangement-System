@@ -26,14 +26,16 @@ import {
   AlertTriangle,
   Building2,
   FileCheck,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface CaseDetailViewProps {
   caseId: string;
   onClose: () => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose }) => {
+export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose, onOpenTask }) => {
   const {
     getCaseById,
     getClaimForCase,
@@ -103,66 +105,92 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
     { num: 6, label: '06. Archived' },
   ];
 
+  const activePendingTask = tasks.find((t) => t.status !== 'COMPLETED' && t.status !== 'RESOLVED');
+
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-6xl max-h-[92vh] rounded-xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden">
-        {/* Modal Top Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-base font-bold text-slate-900">
-                {activeCase.caseNumber}
-              </span>
-              <span className="text-slate-400">·</span>
-              <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                Claim {activeCase.claimId}
-              </span>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded font-semibold border ${
-                  activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : activeCase.status === 'IN_REVIEW' || activeCase.status === 'FRAUD_HOLD'
-                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
-              >
-                {activeCase.status.replace('_', ' ')}
-              </span>
-            </div>
-            <h2 className="text-sm font-semibold text-slate-800 mt-1">{activeCase.title}</h2>
+    <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
+      {/* Full Screen Top Header Bar */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Cases Cockpit</span>
+          </button>
+
+          <span className="text-slate-300">|</span>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="font-mono text-base font-bold text-slate-900">
+              {activeCase.caseNumber}
+            </span>
+            <span className="text-slate-400">·</span>
+            <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+              Claim {activeCase.claimId}
+            </span>
+            <span
+              className={`text-xs px-2.5 py-0.5 rounded font-semibold border ${
+                activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : activeCase.status === 'IN_REVIEW' || activeCase.status === 'FRAUD_HOLD'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              }`}
+            >
+              {activeCase.status.replace('_', ' ')}
+            </span>
           </div>
+        </div>
+
+        {/* Header Right Action Group */}
+        <div className="flex items-center gap-2">
+          {activePendingTask && onOpenTask && (
+            <button
+              onClick={() => onOpenTask(activePendingTask._id)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Work on Active Task ({activePendingTask.taskId})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            title="Return to Dashboard"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+      </div>
 
-        {/* 6-Stage Progress Stepper Bar */}
-        <div className="px-6 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between text-xs overflow-x-auto">
+      {/* 6-Stage Progress Stepper Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3 shadow-2xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs overflow-x-auto">
           {stagesList.map((st, idx) => {
             const isCompleted = activeCase.currentStage > st.num;
             const isCurrent = activeCase.currentStage === st.num;
             return (
               <React.Fragment key={st.num}>
-                <div className="flex items-center gap-1.5 shrink-0 py-1">
+                <div className="flex items-center gap-2 shrink-0 py-1">
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
                       isCompleted
                         ? 'bg-emerald-600 text-white'
                         : isCurrent
-                        ? 'bg-blue-600 text-white ring-2 ring-blue-200'
+                        ? 'bg-blue-600 text-white ring-4 ring-blue-100'
                         : 'bg-slate-200 text-slate-500'
                     }`}
                   >
-                    {isCompleted ? <Check className="w-3 h-3" /> : st.num}
+                    {isCompleted ? <Check className="w-3.5 h-3.5" /> : st.num}
                   </div>
                   <span
-                    className={`font-medium ${
+                    className={`font-semibold ${
                       isCurrent
-                        ? 'text-blue-900 font-semibold'
+                        ? 'text-blue-900 font-bold'
                         : isCompleted
                         ? 'text-slate-800'
                         : 'text-slate-400'
@@ -173,7 +201,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                 </div>
                 {idx < stagesList.length - 1 && (
                   <div
-                    className={`flex-1 h-0.5 mx-2 min-w-4 ${
+                    className={`flex-1 h-0.5 mx-3 min-w-4 ${
                       activeCase.currentStage > st.num ? 'bg-emerald-500' : 'bg-slate-200'
                     }`}
                   />
@@ -182,6 +210,101 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
             );
           })}
         </div>
+      </div>
+
+      {/* Contextual Stage Action Callout Banner */}
+      <div className="max-w-7xl w-full mx-auto px-6 pt-5">
+        {activeCase.currentStage === 2 && (
+          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span className="text-rose-900 font-medium">
+                Stage 02 Duplicate Exception Hold: Conflicting claim collision detected. Triage decision required to advance to Stage 03.
+              </span>
+            </div>
+            {tasks.some((t) => t.taskType === 'DUPLICATE_CLAIM_CHECK') && onOpenTask && (
+              <button
+                onClick={() => {
+                  const t = tasks.find((tsk) => tsk.taskType === 'DUPLICATE_CLAIM_CHECK');
+                  if (t) onOpenTask(t._id);
+                }}
+                className="px-3 py-1 bg-rose-700 hover:bg-rose-800 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+              >
+                Resolve Duplicate
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeCase.currentStage === 3 && (
+          <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="text-amber-900 font-medium">
+                Stage 03 Evidence Audit: {activeCase.missingDocumentTypes.length} mandatory Document Control Numbers (DCN) needed to advance to Clinical Review.
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveTab('evidences')}
+              className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+            >
+              Upload / Verify DCN
+            </button>
+          </div>
+        )}
+
+        {activeCase.currentStage === 4 && (
+          <div className="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-blue-600 shrink-0" />
+              <span className="text-blue-900 font-medium">
+                Stage 04 Physician Adjudication: Doctor Review required. (Restricted to Doctor Approver role).
+              </span>
+            </div>
+            {tasks.some((t) => t.taskType === 'DOCTOR_CLINICAL_REVIEW') && onOpenTask && (
+              <button
+                onClick={() => {
+                  const t = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                  if (t) onOpenTask(t._id);
+                }}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+              >
+                Work on Doctor Review
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeCase.currentStage === 5 && (
+          <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-emerald-900 font-medium">
+                Stage 05 Ready for Settlement: Loss reserve approved at ${activeCase.financials.preliminaryReserve.toFixed(2)}. Net payout: ${activeCase.financials.netPayout.toFixed(2)}.
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveTab('settlement')}
+              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded text-xs shrink-0 cursor-pointer"
+            >
+              Review Voucher
+            </button>
+          </div>
+        )}
+
+        {activeCase.currentStage === 6 && (
+          <div className="p-3.5 rounded-lg bg-slate-200/70 border border-slate-300 text-xs flex items-center gap-2 text-slate-700 font-medium">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Stage 06 Case Sealed & Closed: Adjudication finalized, voucher disbursed, and full append-only BSON event log sealed.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Case Content Wrapper */}
+      <div className="max-w-7xl w-full mx-auto p-6 md:p-8 flex-1 flex flex-col">
+        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden flex-1 flex flex-col">
 
         {/* Navigation Tabs */}
         <div className="px-6 pt-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto">
@@ -602,6 +725,16 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      {onOpenTask && (
+                        <button
+                          onClick={() => onOpenTask(task._id)}
+                          className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        >
+                          <span>Work on Task in Full Page</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
+
                       <select
                         value={task.status}
                         onChange={(e) => updateTaskStatus(task._id, e.target.value as any)}
@@ -862,6 +995,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

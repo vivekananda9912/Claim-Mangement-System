@@ -22,9 +22,10 @@ import {
 
 interface WorkbasketsViewProps {
   onSelectCase: (caseId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export const WorkbasketsView: React.FC<WorkbasketsViewProps> = ({ onSelectCase }) => {
+export const WorkbasketsView: React.FC<WorkbasketsViewProps> = ({ onSelectCase, onOpenTask }) => {
   const { tasks, updateTaskStatus } = useClaimsStore();
   const [activeBasket, setActiveBasket] = useState<WorkbasketId>('INTAKE_TRIAGE');
   const [statusFilter, setStatusFilter] = useState<'ALL' | TaskStatus>('ALL');
@@ -182,6 +183,16 @@ export const WorkbasketsView: React.FC<WorkbasketsViewProps> = ({ onSelectCase }
 
               {/* Status & Case Routing Actions */}
               <div className="flex items-center gap-2 shrink-0">
+                {onOpenTask && (
+                  <button
+                    onClick={() => onOpenTask(t._id)}
+                    className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <span>Work on Task</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
                 <select
                   value={t.status}
                   onChange={(e) => updateTaskStatus(t._id, e.target.value as any)}
@@ -197,10 +208,9 @@ export const WorkbasketsView: React.FC<WorkbasketsViewProps> = ({ onSelectCase }
 
                 <button
                   onClick={() => onSelectCase(t.caseId)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition-colors cursor-pointer"
                 >
-                  <span>Open Case</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Case Details</span>
                 </button>
               </div>
             </div>

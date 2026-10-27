@@ -22,7 +22,7 @@ interface DoctorReviewWorkbenchProps {
 }
 
 export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ onSelectCase }) => {
-  const { cases, claims, doctors, evidences, doctorAdjudicateClaim } = useClaimsStore();
+  const { cases, claims, doctors, evidences, doctorAdjudicateClaim, currentRole, setRole } = useClaimsStore();
   const [selectedDoctorId, setSelectedDoctorId] = useState('DOC-DR-CHEN');
 
   // Find cases currently in Clinical Review (Stage 4)
@@ -66,8 +66,6 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
       itemDecisions,
       doctorNotes,
     });
-
-    alert(`Clinical review completed for ${activeCase.caseNumber}. Case advanced to Stage 5 Settlement.`);
   };
 
   return (
@@ -108,6 +106,29 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
           </select>
         </div>
       </div>
+
+      {/* Analyst Role Warning Banner if viewing as Analyst */}
+      {currentRole !== 'DOCTOR_APPROVER' && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-bold text-amber-900 block">
+                Read-Only Mode: Doctor Approver Role Required
+              </span>
+              <span className="text-amber-800 text-[11px]">
+                You are currently logged in as an Analyst. In compliance with clinical utilization rules, only licensed physicians can submit medical necessity sign-offs.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => setRole('DOCTOR_APPROVER')}
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer"
+          >
+            Switch to Dr. Sarah Chen, MD
+          </button>
+        </div>
+      )}
 
       {clinicalCases.length === 0 ? (
         <div className="bg-white p-12 border border-slate-200 rounded-xl text-center text-slate-500 shadow-2xs">
@@ -337,10 +358,19 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+                    disabled={currentRole !== 'DOCTOR_APPROVER'}
+                    className={`flex items-center gap-1.5 px-5 py-2.5 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                      currentRole === 'DOCTOR_APPROVER'
+                        ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
+                        : 'bg-slate-400 cursor-not-allowed opacity-75'
+                    }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Submit Clinical Sign-Off & Lock Reserve (Advance to Stage 5)</span>
+                    <span>
+                      {currentRole === 'DOCTOR_APPROVER'
+                        ? 'Submit Clinical Sign-Off & Lock Reserve (Advance to Stage 5)'
+                        : 'Doctor Role Required to Submit Sign-Off'}
+                    </span>
                   </button>
                 </div>
               </form>

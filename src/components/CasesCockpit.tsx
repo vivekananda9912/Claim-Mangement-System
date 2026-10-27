@@ -25,11 +25,13 @@ import {
 interface CasesCockpitProps {
   onSelectCase: (caseId: string) => void;
   onOpenNewCase: () => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
 export const CasesCockpit: React.FC<CasesCockpitProps> = ({
   onSelectCase,
   onOpenNewCase,
+  onOpenTask,
 }) => {
   const { cases, tasks, evidences, policies } = useClaimsStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -380,16 +382,39 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
 
                       {/* Action */}
                       <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectCase(c._id);
-                          }}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Open Case Workspace"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {(() => {
+                            const pendingTask = tasks.find(
+                              (t) => t.caseId === c._id && t.status !== 'COMPLETED' && t.status !== 'RESOLVED'
+                            );
+                            if (pendingTask && onOpenTask) {
+                              return (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenTask(pendingTask._id);
+                                  }}
+                                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors whitespace-nowrap cursor-pointer"
+                                  title={`Execute task ${pendingTask.taskId}`}
+                                >
+                                  Work on Task
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectCase(c._id);
+                            }}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                            title="Open Case Full Screen"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

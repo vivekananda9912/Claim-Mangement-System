@@ -315,3 +315,26 @@ export interface CaseEvent {
   payload: Record<string, any>;
   timestamp: string;
 }
+
+export interface StageFeedback {
+  caseId: string;
+  caseNumber: string;
+  fromStage: number;
+  toStage: number;
+  stageName: string;
+  title: string;
+  summary: string;
+  actor: {
+    name: string;
+    role: string;
+  };
+  timestamp: string;
+  details?: {
+    netPayout?: number;
+    reserve?: number;
+    dcnId?: string;
+    newTaskId?: string;
+    newTaskTitle?: string;
+    actionTaken?: string;
+  };
+}
