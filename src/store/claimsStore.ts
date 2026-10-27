@@ -261,6 +261,13 @@ class ClaimsEngine {
   }
 
   public getTasksForCase(caseId: string) {
+    if (this.currentRole === 'DOCTOR_APPROVER') {
+      // Doctor can only see his/her own clinical tasks
+      return this.tasks.filter(
+        (t) => t.caseId === caseId && (t.taskType === 'DOCTOR_CLINICAL_REVIEW' || t.workbasket === 'CLINICAL_REVIEW')
+      );
+    }
+    // Analyst can see all tasks under the case
     return this.tasks.filter((t) => t.caseId === caseId);
   }
 
@@ -277,6 +284,13 @@ class ClaimsEngine {
   }
 
   public getAllTasks() {
+    if (this.currentRole === 'DOCTOR_APPROVER') {
+      // Doctor can only see doctor tasks across the platform
+      return this.tasks.filter(
+        (t) => t.taskType === 'DOCTOR_CLINICAL_REVIEW' || t.workbasket === 'CLINICAL_REVIEW'
+      );
+    }
+    // Analyst can see all case tasks
     return this.tasks;
   }
 
@@ -786,6 +800,12 @@ class ClaimsEngine {
     const task = this.tasks.find((t) => t._id === taskId || t.taskId === taskId);
     if (!task) return;
 
+    // Guardrail: Analyst cannot modify Doctor Clinical Review tasks
+    if (task.taskType === 'DOCTOR_CLINICAL_REVIEW' && this.currentRole !== 'DOCTOR_APPROVER') {
+      console.warn('Role Guardrail: Analyst cannot update Doctor Review task status.');
+      return;
+    }
+
     const oldStatus = task.status;
     task.status = status;
     if (notes) task.resolutionNotes = notes;
@@ -822,6 +842,12 @@ class ClaimsEngine {
     const targetCase = this.cases.find((c) => c._id === params.caseId);
     const claim = this.claims.find((c) => c.caseId === params.caseId);
     if (!targetCase || !claim) return;
+
+    // Guardrail: Only DOCTOR_APPROVER can submit doctor review decisions
+    if (this.currentRole !== 'DOCTOR_APPROVER') {
+      console.warn('Role Guardrail: Only DOCTOR_APPROVER can execute clinical decision adjudication.');
+      return;
+    }
 
     // Apply item decisions
     params.itemDecisions.forEach((dec) => {

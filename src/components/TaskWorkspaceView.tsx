@@ -302,23 +302,15 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                   </div>
                 </div>
 
-                <div className="p-3 bg-white/80 rounded-lg border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <span className="text-rose-900 font-medium">
-                    Want to test or execute this Doctor Review task now?
-                  </span>
-                  <button
-                    onClick={() => setRole('DOCTOR_APPROVER')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
-                  >
-                    <Stethoscope className="w-3.5 h-3.5" />
-                    <span>Switch to Dr. Sarah Chen, MD (Doctor)</span>
-                  </button>
+                <div className="p-3 bg-white/80 rounded-lg border border-rose-200 flex items-center gap-2 text-xs text-rose-900 font-medium">
+                  <Lock className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>Licensed Physician sign-off required to adjudicate. Log out and sign in with doctor credentials (Dr. Sarah Chen, MD) to submit clinical decisions.</span>
                 </div>
               </div>
             )}
 
-            {/* DOCTOR TASK VIEW (FOR DOCTOR ROLE) */}
-            {isDoctorTask && isDoctorRole && (
+            {/* DOCTOR TASK VIEW (ACCESSIBLE TO BOTH, READ-ONLY FOR ANALYST) */}
+            {isDoctorTask && (
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
@@ -327,12 +319,22 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                     </div>
                     <div>
                       <h2 className="text-sm font-bold text-slate-900">Physician Clinical Adjudication Desk</h2>
-                      <p className="text-[11px] text-slate-500">Review itemized billing against operative notes.</p>
+                      <p className="text-[11px] text-slate-500">
+                        {isDoctorRole
+                          ? 'Review itemized billing against operative notes.'
+                          : 'Analyst Read-Only Inspection Mode'}
+                      </p>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                    Dr. Sarah Chen, MD (Authorized)
-                  </span>
+                  {isDoctorRole ? (
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                      Dr. Sarah Chen, MD (Authorized)
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-amber-700" /> Read-Only for Analyst
+                    </span>
+                  )}
                 </div>
 
                 <form onSubmit={handleDoctorSubmit} className="space-y-4">
@@ -379,7 +381,10 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                                     },
                                   })
                                 }
-                                className="w-full p-1.5 bg-white border border-slate-300 rounded text-xs font-semibold cursor-pointer"
+                                disabled={isAnalystRestrictedOnDoctor}
+                                className={`w-full p-1.5 bg-white border border-slate-300 rounded text-xs font-semibold ${
+                                  isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'cursor-pointer'
+                                }`}
                               >
                                 <option value="APPROVED">APPROVE (Full Allowable)</option>
                                 <option value="MODIFIED">MODIFY / DOWNCODE</option>
@@ -403,7 +408,10 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                                       },
                                     })
                                   }
-                                  className="w-full p-1.5 bg-white border border-slate-300 rounded text-xs font-mono"
+                                  disabled={isAnalystRestrictedOnDoctor}
+                                  className={`w-full p-1.5 bg-white border border-slate-300 rounded text-xs font-mono ${
+                                    isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''
+                                  }`}
                                 />
                               </div>
                             )}
@@ -423,7 +431,10 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                                     },
                                   })
                                 }
-                                className="w-full p-1.5 bg-white border border-slate-300 rounded text-xs"
+                                disabled={isAnalystRestrictedOnDoctor}
+                                className={`w-full p-1.5 bg-white border border-slate-300 rounded text-xs ${
+                                  isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''
+                                }`}
                               />
                             </div>
                           </div>
@@ -439,7 +450,10 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                       <select
                         value={overallDecision}
                         onChange={(e) => setOverallDecision(e.target.value as any)}
-                        className="w-full p-2 bg-white border border-slate-300 rounded font-semibold text-xs cursor-pointer"
+                        disabled={isAnalystRestrictedOnDoctor}
+                        className={`w-full p-2 bg-white border border-slate-300 rounded font-semibold text-xs ${
+                          isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'cursor-pointer'
+                        }`}
                       >
                         <option value="APPROVED">APPROVED (Authorize Normal Loss Reserve)</option>
                         <option value="PARTIALLY_APPROVED">PARTIALLY APPROVED (Modified Codes)</option>
@@ -463,18 +477,32 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                       rows={3}
                       value={doctorNotes}
                       onChange={(e) => setDoctorNotes(e.target.value)}
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                      disabled={isAnalystRestrictedOnDoctor}
+                      className={`w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 ${
+                        isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''
+                      }`}
                       required
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Submit Clinical Adjudication & Advance to Stage 05 (Settlement)</span>
-                  </button>
+                  {isDoctorRole ? (
+                    <button
+                      type="submit"
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Submit Clinical Adjudication & Advance to Stage 05 (Settlement)</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full py-3 bg-slate-100 border border-slate-300 text-slate-500 font-bold text-xs rounded-xl cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
+                    >
+                      <Lock className="w-4 h-4 text-slate-400" />
+                      <span>Analyst Read-Only · Cannot Adjudicate Doctor Task</span>
+                    </button>
+                  )}
                 </form>
               </div>
             )}
@@ -780,8 +808,11 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                   <label className="block text-slate-500 mb-1">Task Status</label>
                   <select
                     value={generalStatus}
+                    disabled={isAnalystRestrictedOnDoctor}
                     onChange={(e) => setGeneralStatus(e.target.value as TaskStatus)}
-                    className="w-full p-2 bg-white border border-slate-300 rounded font-semibold text-xs cursor-pointer"
+                    className={`w-full p-2 bg-white border border-slate-300 rounded font-semibold text-xs ${
+                      isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'cursor-pointer'
+                    }`}
                   >
                     <option value="OPEN">OPEN</option>
                     <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -798,20 +829,34 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                     type="text"
                     placeholder="Enter audit remarks or actions taken"
                     value={resolutionNotes}
+                    disabled={isAnalystRestrictedOnDoctor}
                     onChange={(e) => setResolutionNotes(e.target.value)}
-                    className="w-full p-2 bg-white border border-slate-300 rounded text-xs"
+                    className={`w-full p-2 bg-white border border-slate-300 rounded text-xs ${
+                      isAnalystRestrictedOnDoctor ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={handleSaveGeneralTask}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  Save Task Updates
-                </button>
+                {isAnalystRestrictedOnDoctor ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-4 py-2 bg-slate-200 text-slate-500 border border-slate-300 rounded-lg text-xs font-semibold cursor-not-allowed flex items-center gap-1.5"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Doctor Sign-Off Required</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSaveGeneralTask}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Save Task Updates
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -109,24 +109,16 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
 
       {/* Analyst Role Warning Banner if viewing as Analyst */}
       {currentRole !== 'DOCTOR_APPROVER' && (
-        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-            <div>
-              <span className="font-bold text-amber-900 block">
-                Read-Only Mode: Doctor Approver Role Required
-              </span>
-              <span className="text-amber-800 text-[11px]">
-                You are currently logged in as an Analyst. In compliance with clinical utilization rules, only licensed physicians can submit medical necessity sign-offs.
-              </span>
-            </div>
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-3 text-xs">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+          <div>
+            <span className="font-bold text-amber-900 block">
+              Read-Only Mode: Doctor Approver Role Required
+            </span>
+            <span className="text-amber-800 text-[11px]">
+              You are currently logged in as an Analyst. Analysts can view case details, but only licensed physicians can submit medical necessity sign-offs. Please log out and sign in with physician credentials (Dr. Sarah Chen, MD) to adjudicate.
+            </span>
           </div>
-          <button
-            onClick={() => setRole('DOCTOR_APPROVER')}
-            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shrink-0 transition-colors shadow-2xs cursor-pointer"
-          >
-            Switch to Dr. Sarah Chen, MD
-          </button>
         </div>
       )}
 

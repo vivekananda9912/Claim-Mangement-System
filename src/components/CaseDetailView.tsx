@@ -27,6 +27,7 @@ import {
   Building2,
   FileCheck,
   ArrowLeft,
+  Lock,
 } from 'lucide-react';
 import { OpenReviewModal } from './OpenReviewModal';
 import { CloseoutModal } from './CloseoutModal';
@@ -153,14 +154,26 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
         {/* Header Right Action Group */}
         <div className="flex items-center gap-2">
           {activeCase.currentStage === 4 && activePendingTask && onOpenTask && (
-            <button
-              onClick={() => onOpenTask(activePendingTask._id)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Doctor Decision Task ({activePendingTask.taskId})</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            currentRole === 'DOCTOR_APPROVER' ? (
+              <button
+                onClick={() => onOpenTask(activePendingTask._id)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Doctor Decision Task ({activePendingTask.taskId})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => onOpenTask(activePendingTask._id)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                title="View doctor task in read-only mode"
+              >
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <span>View Doctor Task ({activePendingTask.taskId})</span>
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )
           )}
 
           <button
@@ -308,20 +321,24 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
-                <button
-                  onClick={() => {
-                    setRole('DOCTOR_APPROVER');
-                    const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
-                    if (docTask && onOpenTask) {
-                      onOpenTask(docTask._id);
-                    }
-                  }}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
-                >
-                  <Stethoscope className="w-4 h-4" />
-                  <span>Switch to Doctor & Adjudicate Decision</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-semibold text-xs">
+                    <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>Assigned to Dr. Sarah Chen, MD (Read-Only for Analyst)</span>
+                  </div>
+                  {onOpenTask && (
+                    <button
+                      onClick={() => {
+                        const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                        if (docTask) onOpenTask(docTask._id);
+                      }}
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs cursor-pointer shadow-2xs transition-colors flex items-center gap-1"
+                    >
+                      <span>View Task</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -766,7 +783,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                     className="p-4 bg-white border border-slate-200 rounded-lg shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-bold text-slate-800">{task.taskId}</span>
                         <span className="text-slate-300">·</span>
                         <span className="text-xs font-semibold text-slate-900">{task.title}</span>
@@ -781,6 +798,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                         >
                           {task.priority}
                         </span>
+                        {task.taskType === 'DOCTOR_CLINICAL_REVIEW' && currentRole !== 'DOCTOR_APPROVER' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5 text-amber-700" /> Doctor Only (Analyst Read-Only)
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-slate-500 mt-1 flex items-center gap-3">
                         <span>Workbasket: <strong className="text-slate-700">{task.workbasket}</strong></span>
@@ -796,34 +818,59 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {onOpenTask && (
-                        <button
-                          onClick={() => onOpenTask(task._id)}
-                          className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                        >
-                          <span>Work on Task in Full Page</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      )}
+                      {task.taskType === 'DOCTOR_CLINICAL_REVIEW' && currentRole !== 'DOCTOR_APPROVER' ? (
+                        <>
+                          {onOpenTask && (
+                            <button
+                              onClick={() => onOpenTask(task._id)}
+                              className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                              title="Inspect Doctor Task in Read-Only Mode"
+                            >
+                              <Lock className="w-3 h-3 text-amber-600" />
+                              <span>View Task (Read-Only)</span>
+                              <ArrowRight className="w-3 h-3 text-slate-400" />
+                            </button>
+                          )}
+                          <div
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-semibold text-slate-500 cursor-not-allowed"
+                            title="Only licensed physician can update Doctor Review status"
+                          >
+                            <Lock className="w-3 h-3 text-amber-600" />
+                            <span>{task.status} (Doctor Only)</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {onOpenTask && (
+                            <button
+                              onClick={() => onOpenTask(task._id)}
+                              className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            >
+                              <span>Work on Task in Full Page</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          )}
 
-                      <select
-                        value={task.status}
-                        onChange={(e) => updateTaskStatus(task._id, e.target.value as any)}
-                        className={`text-xs font-semibold px-2.5 py-1 rounded border cursor-pointer ${
-                          task.status === 'COMPLETED' || task.status === 'RESOLVED'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : task.status === 'IN_PROGRESS'
-                            ? 'bg-blue-50 text-blue-800 border-blue-300'
-                            : 'bg-slate-50 text-slate-700 border-slate-300'
-                        }`}
-                      >
-                        <option value="OPEN">OPEN</option>
-                        <option value="IN_PROGRESS">IN_PROGRESS</option>
-                        <option value="PENDING">PENDING</option>
-                        <option value="RESOLVED">RESOLVED</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                        <option value="ESCALATED">ESCALATED</option>
-                      </select>
+                          <select
+                            value={task.status}
+                            onChange={(e) => updateTaskStatus(task._id, e.target.value as any)}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded border cursor-pointer ${
+                              task.status === 'COMPLETED' || task.status === 'RESOLVED'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : task.status === 'IN_PROGRESS'
+                                ? 'bg-blue-50 text-blue-800 border-blue-300'
+                                : 'bg-slate-50 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            <option value="OPEN">OPEN</option>
+                            <option value="IN_PROGRESS">IN_PROGRESS</option>
+                            <option value="PENDING">PENDING</option>
+                            <option value="RESOLVED">RESOLVED</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="ESCALATED">ESCALATED</option>
+                          </select>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
