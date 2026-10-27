@@ -152,13 +152,13 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
 
         {/* Header Right Action Group */}
         <div className="flex items-center gap-2">
-          {activePendingTask && onOpenTask && (
+          {activeCase.currentStage === 4 && activePendingTask && onOpenTask && (
             <button
               onClick={() => onOpenTask(activePendingTask._id)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Work on Active Task ({activePendingTask.taskId})</span>
+              <span>Doctor Decision Task ({activePendingTask.taskId})</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -748,8 +748,19 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                 Discrete operational tasks spawned under this Case aggregate. Completing milestone tasks updates the case stage.
               </div>
 
-              <div className="space-y-3">
-                {tasks.map((task) => (
+              {tasks.length === 0 ? (
+                <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 shadow-2xs">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div className="font-bold text-slate-700 text-sm">No Task Assigned for Stage 0{activeCase.currentStage}</div>
+                  <p className="mt-1 max-w-md mx-auto text-slate-400">
+                    Operational stages (Capture, Initial Review, Evidence, Settlement) progress through the standard screen flow. Discrete tasks are assigned strictly for Stage 04 (Doctor Decision).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => (
                   <div
                     key={task._id}
                     className="p-4 bg-white border border-slate-200 rounded-lg shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3"
@@ -817,8 +828,9 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
           {/* TAB 5: FRAUD & DUPLICATE RISK */}
           {activeTab === 'fraud' && (

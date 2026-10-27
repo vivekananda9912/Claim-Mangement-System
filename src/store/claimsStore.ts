@@ -590,23 +590,7 @@ class ClaimsEngine {
       { score: fraudRecord.fraudScore, riskLevel: fraudRecord.riskLevel }
     );
 
-    if (fraudRecord.fraudScore >= 50) {
-      const fraudTask: CaseTask = {
-        _id: `task-${Date.now()}-fraud`,
-        taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-        caseId,
-        caseNumber,
-        stageNumber: 4,
-        workbasket: 'FRAUD_SIU',
-        taskType: 'FRAUD_INVESTIGATION',
-        title: `SIU Investigation: Elevated Fraud Score (${fraudRecord.fraudScore}/100)`,
-        priority: 'URGENT',
-        status: 'OPEN',
-        slaHoursRemaining: 12,
-        createdAt: new Date().toISOString(),
-      };
-      this.tasks.unshift(fraudTask);
-    }
+    // Flow proceeds normally to Stage 02 Initial Review without creating intermediate tasks
 
     this.lastStageFeedback = {
       caseId,
@@ -889,22 +873,7 @@ class ClaimsEngine {
       docTask.resolutionNotes = params.doctorNotes;
     }
 
-    // Spawn Settlement Payment Task
-    const payTask: CaseTask = {
-      _id: `task-${Date.now()}-settle`,
-      taskId: `TSK-${Math.floor(10000 + Math.random() * 90000)}`,
-      caseId: targetCase._id,
-      caseNumber: targetCase.caseNumber,
-      stageNumber: 5,
-      workbasket: 'SETTLEMENT_FINANCE',
-      taskType: 'SETTLEMENT_PAYMENT',
-      title: `Authorize Settlement Disbursement: $${newNetPayout.toFixed(2)}`,
-      priority: targetCase.priority,
-      status: 'OPEN',
-      slaHoursRemaining: 24,
-      createdAt: new Date().toISOString(),
-    };
-    this.tasks.unshift(payTask);
+    // Normal sequential flow: Stage 5 proceeds to closeout & disbursement screen without intermediate tasks
 
     this.appendEvent(
       targetCase._id,
@@ -946,8 +915,6 @@ class ClaimsEngine {
       details: {
         reserve,
         netPayout: newNetPayout,
-        newTaskId: payTask?.taskId,
-        newTaskTitle: payTask?.title,
         actionTaken: `Physician Decision: ${params.decision}`,
       },
     };
