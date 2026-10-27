@@ -9,11 +9,9 @@ import { LoginScreen } from './components/LoginScreen';
 import { CasesCockpit } from './components/CasesCockpit';
 import { CaseDetailView } from './components/CaseDetailView';
 import { TaskWorkspaceView } from './components/TaskWorkspaceView';
-import { WorkbasketsView } from './components/WorkbasketsView';
+import { MemberSearchView } from './components/MemberSearchView';
 import { PolicyIntakeWizard } from './components/PolicyIntakeWizard';
 import { DoctorReviewWorkbench } from './components/DoctorReviewWorkbench';
-import { OperationsAnalytics } from './components/OperationsAnalytics';
-import { MongoExplorer } from './components/MongoExplorer';
 import { StageFeedbackModal } from './components/StageFeedbackModal';
 import { useClaimsStore } from './store/claimsStore';
 import { UserRole } from './types';
@@ -27,12 +25,18 @@ export default function App() {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showIntakeModal, setShowIntakeModal] = useState<boolean>(false);
 
-  const { userPersona, currentRole, setRole } = useClaimsStore();
+  const { currentRole, setRole } = useClaimsStore();
 
   const handleLogin = (role: UserRole) => {
     setRole(role);
     setIsLoggedIn(true);
     localStorage.setItem('omniclaim_logged_in', 'true');
+    // If doctor logs in, take them directly to Clinical Desk; if analyst, to Cases / Global Search
+    if (role === 'DOCTOR_APPROVER') {
+      setActiveTab('doctor');
+    } else {
+      setActiveTab('cases');
+    }
   };
 
   const handleLogout = () => {
@@ -103,10 +107,10 @@ export default function App() {
     );
   }
 
-  // Default App Viewport
+  // Clean Default App Viewport
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
-      {/* Top Navigation Bar with Persona & Role Switcher */}
+      {/* Clean Top Navigation Bar with Global Search, Member Search, Profile & Logout */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -114,32 +118,10 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Viewport Content */}
+      {/* Main Viewport Content - Clean, Uncluttered Layout */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
-        {/* Contextual Role Banner */}
-        <div className="bg-white border border-slate-200/80 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 gap-2 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-900">Current Actor Role:</span>
-            <span
-              className={`font-semibold px-2 py-0.5 rounded border ${
-                currentRole === 'DOCTOR_APPROVER'
-                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                  : 'text-blue-700 bg-blue-50 border-blue-200'
-              }`}
-            >
-              {userPersona.title} ({userPersona.name})
-            </span>
-            <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="hidden sm:inline text-slate-500">{userPersona.department}</span>
-          </div>
-
-          <div className="text-slate-500 text-[11px] flex items-center gap-2">
-            <span>{userPersona.description}</span>
-          </div>
-        </div>
-
-        {/* Tab View Routing */}
-        {activeTab === 'cases' && (
+        {/* Tab 1: Global Search & Workbasket Table */}
+        {(activeTab === 'cases' || activeTab === 'global_search') && (
           <CasesCockpit
             onSelectCase={(id) => setSelectedCaseId(id)}
             onOpenNewCase={() => setShowIntakeModal(true)}
@@ -147,27 +129,26 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'workbaskets' && (
-          <WorkbasketsView
+        {/* Tab 2: Member & Household Directory Search */}
+        {activeTab === 'member_search' && (
+          <MemberSearchView
+            onStartIntake={() => setShowIntakeModal(true)}
             onSelectCase={(id) => setSelectedCaseId(id)}
-            onOpenTask={(tid) => setActiveTaskId(tid)}
           />
         )}
 
+        {/* Tab 3: Doctor Clinical Desk (Accessible for Doctor role) */}
+        {activeTab === 'doctor' && (
+          <DoctorReviewWorkbench onSelectCase={(id) => setSelectedCaseId(id)} />
+        )}
+
+        {/* Tab 4: Direct Intake Wizard (if triggered via tab) */}
         {activeTab === 'intake' && (
           <PolicyIntakeWizard
             onCaseCreated={handleCaseCreated}
             onCancel={() => setActiveTab('cases')}
           />
         )}
-
-        {activeTab === 'doctor' && (
-          <DoctorReviewWorkbench onSelectCase={(id) => setSelectedCaseId(id)} />
-        )}
-
-        {activeTab === 'analytics' && <OperationsAnalytics />}
-
-        {activeTab === 'mongo' && <MongoExplorer />}
       </main>
 
       {/* Standalone Intake Wizard Modal */}
@@ -194,15 +175,15 @@ export default function App() {
         }}
       />
 
-      {/* Enterprise Footer */}
+      {/* Clean Enterprise Footer */}
       <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 mt-auto">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-700">OmniClaim Health Enterprise</span>
+          <span className="font-semibold text-slate-700">OmniClaim Health</span>
           <span>·</span>
-          <span>Dual-Role Deterministic Claims Adjudication</span>
+          <span>Dual-Role Deterministic Claims Engine</span>
         </div>
         <div className="text-[11px] text-slate-400">
-          MongoDB BSON Event Sourcing Engine · 6-Stage Deterministic Rules
+          Workbasket Adjudication · 6-Stage Deterministic Rules
         </div>
       </footer>
     </div>

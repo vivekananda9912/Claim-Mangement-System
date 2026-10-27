@@ -130,14 +130,13 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
         </button>
       </div>
 
-      {/* Global Case Search Box & Segmented Filters */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
-        {/* Global Search Input */}
+      {/* Global Case Search Box */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Global Case Search: Enter Case Number (CASE-2026-...), Claim ID, Patient Name, HCID (HCID-8492-...), or Policy Number..."
+            placeholder="Global Search: Type Case ID (e.g. CASE-2026-0814), Claim ID, Patient Name, HCID (e.g. HCID-8492-1001-A), or Policy..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 font-sans transition-all placeholder:text-slate-400"
@@ -150,49 +149,6 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
               <X className="w-4 h-4" />
             </button>
           )}
-        </div>
-
-        {/* Quick Stage Filter Badges */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 text-xs">
-          <span className="text-[11px] font-bold text-slate-500 mr-1 shrink-0 flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Filter Stage:
-          </span>
-          {[
-            { id: 'ALL', label: 'All Cases' },
-            { id: 1, label: '01. Capture' },
-            { id: 2, label: '02. Initial Review' },
-            { id: 3, label: '03. Claim & Evidence' },
-            { id: 4, label: '04. Decision (Doctor)' },
-            { id: 5, label: '05. Closeout' },
-            { id: 6, label: '06. Closed' },
-          ].map((st) => {
-            const isSelected = selectedStage === st.id;
-            const count =
-              st.id === 'ALL'
-                ? cases.length
-                : cases.filter((c) => c.currentStage === st.id).length;
-
-            return (
-              <button
-                key={st.id}
-                onClick={() => setSelectedStage(st.id as any)}
-                className={`px-3 py-1 rounded-md font-medium text-[11px] transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                  isSelected
-                    ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                }`}
-              >
-                <span>{st.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-blue-800 text-white' : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -265,9 +221,18 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
                     >
                       {/* Case & Claim ID */}
                       <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 font-mono text-xs">
-                          {c.caseNumber}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectCase(c._id);
+                          }}
+                          className="font-bold text-blue-600 hover:text-blue-800 hover:underline font-mono text-xs text-left cursor-pointer flex items-center gap-1 group"
+                          title="Open case details"
+                        >
+                          <span>{c.caseNumber}</span>
+                          <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600" />
+                        </button>
                         <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
                           <span className="text-blue-700 font-semibold">{c.claimId}</span>
                           <span>·</span>
