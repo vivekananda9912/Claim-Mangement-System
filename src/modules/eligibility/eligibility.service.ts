@@ -86,8 +86,20 @@ export class EligibilityService {
     };
     data: EligibilitySubscriberResult[];
   }> {
-    const customers = await CustomerModel.find().exec();
-    const policies = await PolicyModel.find().exec();
+    let customers = await CustomerModel.find().exec();
+    let policies = await PolicyModel.find().exec();
+
+    // Auto-seed in-memory store if records have not been initialized yet
+    if (!customers || customers.length === 0) {
+      try {
+        const { seedDatabase } = await import('../../db/seed');
+        await seedDatabase();
+        customers = await CustomerModel.find().exec();
+        policies = await PolicyModel.find().exec();
+      } catch (err) {
+        console.warn('[EligibilityService] Auto-seed failed, proceeding with current database state:', err);
+      }
+    }
 
     const policyMap = new Map<string, IPolicy>();
     policies.forEach((p) => {
@@ -96,7 +108,9 @@ export class EligibilityService {
 
     const results: EligibilitySubscriberResult[] = [];
     const searchHcid = (params.hcid || '').trim().toLowerCase();
+    const cleanSearchHcid = searchHcid.replace(/[^a-z0-9]/g, '');
     const searchQuery = (params.query || '').trim().toLowerCase();
+    const cleanSearchQuery = searchQuery.replace(/[^a-z0-9]/g, '');
     const searchPolicy = (params.policyNumber || '').trim().toLowerCase();
     const searchRel = (params.relationship || '').trim().toUpperCase();
 
@@ -129,7 +143,9 @@ export class EligibilityService {
         const rel = member.relationship === 'PRIMARY' ? 'PRIMARY_SUBSCRIBER' : member.relationship;
         const fullName = `${member.firstName} ${member.lastName}`;
         const memberHcid = (member.hcid || '').toLowerCase();
+        const cleanMemberHcid = memberHcid.replace(/[^a-z0-9]/g, '');
         const familyHcid = (cust.familyHcid || '').toLowerCase();
+        const cleanFamilyHcid = familyHcid.replace(/[^a-z0-9]/g, '');
         const memberPolicy = (cust.familyPolicyNumber || '').toLowerCase();
         const memberId = (member.memberId || '').toLowerCase();
 
@@ -137,7 +153,9 @@ export class EligibilityService {
 
         if (searchHcid) {
           const directMatch =
-            memberHcid.includes(searchHcid) || familyHcid.includes(searchHcid);
+            memberHcid.includes(searchHcid) ||
+            familyHcid.includes(searchHcid) ||
+            (cleanSearchHcid.length >= 3 && (cleanMemberHcid.includes(cleanSearchHcid) || cleanFamilyHcid.includes(cleanSearchHcid)));
           if (!directMatch) matches = false;
         }
 
@@ -147,7 +165,8 @@ export class EligibilityService {
             familyHcid.includes(searchQuery) ||
             fullName.toLowerCase().includes(searchQuery) ||
             memberPolicy.includes(searchQuery) ||
-            memberId.includes(searchQuery);
+            memberId.includes(searchQuery) ||
+            (cleanSearchQuery.length >= 3 && (cleanMemberHcid.includes(cleanSearchQuery) || cleanFamilyHcid.includes(cleanSearchQuery)));
           if (!queryMatch) matches = false;
         }
 

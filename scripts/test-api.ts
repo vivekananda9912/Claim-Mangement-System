@@ -44,7 +44,7 @@ async function runTestSuite() {
     customer?.primarySubscriber.firstName === 'Eleanor' && customer?.primarySubscriber.lastName === 'Vance',
     'Primary subscriber matches Eleanor Vance'
   );
-  assert(customer?.dependents.length >= 2, 'Customer has covered dependents (Spouse, Children, Parent)');
+  assert(!!customer?.dependents && customer.dependents.length >= 2, 'Customer has covered dependents (Spouse, Children, Parent)');
 
   const memberLookup = await customerService.getByMemberId('MEM-9812-03');
   assert(

@@ -61,13 +61,30 @@ class ClaimsEngine {
 
   constructor() {
     // Attempt local storage hydration for persistence across refreshes
-    const saved = localStorage.getItem('omniclaim_state_v1');
+    try {
+      localStorage.removeItem('omniclaim_state_v1');
+      localStorage.removeItem('omniclaim_state_v2');
+    } catch {}
+
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('omniclaim_state_v3') : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.cases && parsed.claims) {
-          this.customers = parsed.customers || this.customers;
-          this.policies = parsed.policies || this.policies;
+          // Verify that cached customers have valid HCIDs across all 5 households
+          const hasValidHcid =
+            Array.isArray(parsed.customers) &&
+            parsed.customers.length >= 5 &&
+            parsed.customers.every(
+              (c: any) =>
+                c.familyHcid &&
+                c.primarySubscriber?.hcid &&
+                Array.isArray(c.dependents) &&
+                c.dependents.every((d: any) => d.hcid)
+            );
+
+          this.customers = hasValidHcid ? parsed.customers : [...INITIAL_CUSTOMERS];
+          this.policies = hasValidHcid && parsed.policies ? parsed.policies : [...INITIAL_POLICIES];
           this.doctors = parsed.doctors || this.doctors;
           this.cases = parsed.cases || this.cases;
           this.claims = parsed.claims || this.claims;
@@ -85,21 +102,23 @@ class ClaimsEngine {
 
   private persist() {
     try {
-      localStorage.setItem(
-        'omniclaim_state_v1',
-        JSON.stringify({
-          customers: this.customers,
-          policies: this.policies,
-          doctors: this.doctors,
-          cases: this.cases,
-          claims: this.claims,
-          tasks: this.tasks,
-          evidences: this.evidences,
-          fraudAssessments: this.fraudAssessments,
-          events: this.events,
-          currentRole: this.currentRole,
-        })
-      );
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(
+          'omniclaim_state_v3',
+          JSON.stringify({
+            customers: this.customers,
+            policies: this.policies,
+            doctors: this.doctors,
+            cases: this.cases,
+            claims: this.claims,
+            tasks: this.tasks,
+            evidences: this.evidences,
+            fraudAssessments: this.fraudAssessments,
+            events: this.events,
+            currentRole: this.currentRole,
+          })
+        );
+      }
     } catch (e) {
       // storage quota or incognito
     }
@@ -149,12 +168,14 @@ class ClaimsEngine {
    * Realtime Member & Eligibility Lookup Service (Simulates EDI 270/271 & FHIR Directory)
    */
   public searchMembersByHcid(query: string) {
-    const q = query.trim().toLowerCase();
-    if (!q) {
+    const raw = (query || '').trim().toLowerCase();
+    if (!raw || raw === 'all') {
       return this.customers;
     }
 
-    return this.customers.filter((c) => {
+    const q = raw.replace(/\s+/g, ' ');
+
+    const filtered = this.customers.filter((c) => {
       // Check family policy or family HCID
       if (
         c.familyPolicyNumber.toLowerCase().includes(q) ||
@@ -164,7 +185,9 @@ class ClaimsEngine {
       }
       // Check primary subscriber
       const p = c.primarySubscriber;
+      const primaryFullName = `${p.firstName} ${p.lastName}`.toLowerCase();
       if (
+        primaryFullName.includes(q) ||
         p.firstName.toLowerCase().includes(q) ||
         p.lastName.toLowerCase().includes(q) ||
         p.memberId.toLowerCase().includes(q) ||
@@ -173,15 +196,35 @@ class ClaimsEngine {
         return true;
       }
       // Check dependents (spouse, child, parent)
-      return c.dependents.some(
-        (d) =>
+      return c.dependents.some((d) => {
+        const depFullName = `${d.firstName} ${d.lastName}`.toLowerCase();
+        return (
+          depFullName.includes(q) ||
           d.firstName.toLowerCase().includes(q) ||
           d.lastName.toLowerCase().includes(q) ||
           d.memberId.toLowerCase().includes(q) ||
           (d.hcid && d.hcid.toLowerCase().includes(q)) ||
           d.relationship.toLowerCase().includes(q)
-      );
+        );
+      });
     });
+
+    // If no direct substring match, try numeric core (e.g. "8492" from "HCID-8492-...")
+    if (filtered.length === 0) {
+      const digits = q.replace(/\D/g, '');
+      if (digits.length >= 3) {
+        return this.customers.filter((c) => {
+          const allHcids = [
+            c.familyHcid,
+            c.primarySubscriber.hcid,
+            ...c.dependents.map((d) => d.hcid),
+          ].join(' ');
+          return allHcids.includes(digits);
+        });
+      }
+    }
+
+    return filtered;
   }
 
   public getCustomers() {

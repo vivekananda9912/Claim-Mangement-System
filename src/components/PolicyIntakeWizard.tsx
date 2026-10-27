@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useClaimsStore } from '../store/claimsStore';
 import { CareCategory, ClaimType, DcnDocumentType, FamilyMember, Customer, Policy } from '../types';
+import { INITIAL_CUSTOMERS, INITIAL_POLICIES } from '../data/mockData';
 import {
   Search,
   CheckCircle2,
@@ -51,6 +52,7 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [showDirectoryTable, setShowDirectoryTable] = useState<boolean>(false);
 
   // Step 2: Case Needed Details
   const [claimType, setClaimType] = useState<ClaimType>('POST_SERVICE');
@@ -86,9 +88,13 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
     setIsSearching(true);
     setServiceStatus('Querying National Healthcare Eligibility Service (GET /v2/eligibility/subscribers)...');
 
+    const cleanQuery = (query || '').trim();
+
+    // 1. Try real backend microservice API (if server is listening)
     try {
-      const res = await fetch(`/v2/eligibility/subscribers?q=${encodeURIComponent(query)}`);
-      if (res.ok) {
+      const res = await fetch(`/v2/eligibility/subscribers?q=${encodeURIComponent(cleanQuery)}`);
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const payload = await res.json();
         if (payload?.data && payload.data.length > 0) {
           const match = payload.data[0];
@@ -135,34 +141,67 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
                 (mappedCust.dependents.length > 0 ? mappedCust.dependents[0] : mappedCust.primarySubscriber);
 
           setSelectedMember(targetMem);
-          const pol = policies.find((p) => p.policyNumber === household.familyPolicyNumber) || null;
+          const pol = policies.find((p) => p.policyNumber === household.familyPolicyNumber) ||
+                      INITIAL_POLICIES.find((p) => p.policyNumber === household.familyPolicyNumber) || null;
           setSelectedPolicy(pol);
           setServiceStatus(
-            `200 OK · NHIC Verified: Master Unit ${household.familyHcid} (${household.subscribers.length} covered subscribers)`
+            `200 OK · NHIC Live Registry: Master Unit ${household.familyHcid} (${household.subscribers.length} covered subscribers)`
           );
           setIsSearching(false);
           return;
         }
       }
     } catch {
-      // In case of network error, proceed to local memory fallback
+      // In case of network error or server reload, proceed to local store
     }
 
-    // Local fallback
-    const results = searchMembersByHcid(query);
+    // 2. Local store search
+    let results = searchMembersByHcid(cleanQuery);
+
+    // 3. Fallback to master seed data if store was empty or had outdated cache
+    if (results.length === 0) {
+      const q = cleanQuery.toLowerCase();
+      results = INITIAL_CUSTOMERS.filter((c) => {
+        if (!q || q === 'all') return true;
+        if (c.familyHcid.toLowerCase().includes(q) || c.familyPolicyNumber.toLowerCase().includes(q)) return true;
+        if (
+          c.primarySubscriber.hcid.toLowerCase().includes(q) ||
+          c.primarySubscriber.firstName.toLowerCase().includes(q) ||
+          c.primarySubscriber.lastName.toLowerCase().includes(q) ||
+          c.primarySubscriber.memberId.toLowerCase().includes(q)
+        ) return true;
+        return c.dependents.some(
+          (d) =>
+            d.hcid.toLowerCase().includes(q) ||
+            d.firstName.toLowerCase().includes(q) ||
+            d.lastName.toLowerCase().includes(q) ||
+            d.memberId.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // 4. If direct match found, select it
     if (results.length > 0) {
       const cust = results[0];
       setSelectedCustomer(cust);
-      const mem = cust.dependents.length > 0 ? cust.dependents[0] : cust.primarySubscriber;
+      // Select dependent matching query or primary subscriber
+      const matchedDep = cust.dependents.find((d) => {
+        const q = cleanQuery.toLowerCase();
+        return d.hcid.toLowerCase().includes(q) || d.firstName.toLowerCase().includes(q) || d.lastName.toLowerCase().includes(q);
+      });
+      const mem = matchedDep || (cust.dependents.length > 0 ? cust.dependents[0] : cust.primarySubscriber);
       setSelectedMember(mem);
-      const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
+      const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) ||
+                  INITIAL_POLICIES.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
       setSelectedPolicy(pol);
-      setServiceStatus(`200 OK · Found Master Unit ${cust.familyHcid} with ${cust.dependents.length + 1} subscribers`);
+      setServiceStatus(`200 OK · Master Directory Match: ${cust.familyHcid} (${cust.dependents.length + 1} subscribers: Primary, Spouse, Child, Parent)`);
     } else {
-      setSelectedCustomer(null);
-      setSelectedMember(null);
-      setSelectedPolicy(null);
-      setServiceStatus('404 Not Found · No subscriber matched the HCID / Query');
+      // 5. If query was completely unrecognizable, default to Vance family so user is never blocked
+      const defaultCust = INITIAL_CUSTOMERS[0];
+      setSelectedCustomer(defaultCust);
+      setSelectedMember(defaultCust.primarySubscriber);
+      setSelectedPolicy(INITIAL_POLICIES[0] || null);
+      setServiceStatus(`Notice: No exact match for "${cleanQuery}". Loaded Vance family household (${defaultCust.familyHcid}).`);
     }
     setIsSearching(false);
   };
@@ -331,27 +370,138 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
                 </button>
               </div>
 
-              {/* Quick Sample HCID Pills */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
-                <span className="text-slate-500 font-medium">Sample Directory HCIDs:</span>
-                {[
-                  { label: 'HCID-8492-1001-A', note: 'Vance Family (4 members: Child, Spouse, Parent)' },
-                  { label: 'HCID-4410-2001-A', note: 'Pendleton Family (4 members)' },
-                  { label: 'HCID-7721-3001-A', note: 'Chen Family (4 members)' },
-                ].map((sample) => (
-                  <button
-                    key={sample.label}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(sample.label);
-                      executeServiceSearch(sample.label);
-                    }}
-                    className="px-2.5 py-1 rounded bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 font-mono text-[10px] font-semibold transition-colors cursor-pointer"
-                  >
-                    {sample.label}
-                  </button>
-                ))}
+              {/* Quick Sample HCID Presets */}
+              <div className="space-y-1.5 pt-1 border-t border-blue-100">
+                <span className="text-[11px] font-bold text-blue-950 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  Verified National Directory Test Presets (Click any to load):
+                </span>
+                <div className="flex flex-wrap gap-1.5 text-xs">
+                  {[
+                    // Vance Family (Platinum PPO)
+                    { hcid: 'HCID-8492-1001-A', label: 'Eleanor Vance', rel: 'Primary', plan: 'Platinum PPO' },
+                    { hcid: 'HCID-8492-1002-B', label: 'Arthur/Marcus Vance', rel: 'Spouse', plan: 'Platinum PPO' },
+                    { hcid: 'HCID-8492-1003-C', label: 'Chloe Vance', rel: 'Child', plan: 'Platinum PPO' },
+                    { hcid: 'HCID-8492-1004-D', label: 'Leo Vance', rel: 'Child', plan: 'Platinum PPO' },
+                    { hcid: 'HCID-8492-1005-E', label: 'Margaret/Clara Vance', rel: 'Parent', plan: 'Platinum PPO' },
+                    // Thorne Family (POS)
+                    { hcid: 'HCID-4410-2001-A', label: 'Marcus Thorne', rel: 'Primary', plan: 'Emerald POS' },
+                    { hcid: 'HCID-4410-2002-B', label: 'Helena Thorne', rel: 'Spouse', plan: 'Emerald POS' },
+                    { hcid: 'HCID-4410-2003-C', label: 'Lucas/Maya Thorne', rel: 'Child', plan: 'Emerald POS' },
+                    { hcid: 'HCID-4410-2004-D', label: 'George Thorne', rel: 'Parent', plan: 'Emerald POS' },
+                    // Sterling Family (HDHP)
+                    { hcid: 'HCID-7721-3001-A', label: 'Julian Sterling', rel: 'Primary', plan: 'Sterling HDHP' },
+                    { hcid: 'HCID-7721-3002-B', label: 'Claire Sterling', rel: 'Spouse', plan: 'Sterling HDHP' },
+                    { hcid: 'HCID-7721-3003-C', label: 'Oliver/Lucas Sterling', rel: 'Child', plan: 'Sterling HDHP' },
+                    { hcid: 'HCID-7721-3005-E', label: 'Evelyn Sterling', rel: 'Parent', plan: 'Sterling HDHP' },
+                    // Morales Family (HMO)
+                    { hcid: 'HCID-9150-4001-A', label: 'Carlos Morales', rel: 'Primary', plan: 'Gold HMO' },
+                    { hcid: 'HCID-9150-4002-B', label: 'Sofia Morales', rel: 'Spouse', plan: 'Gold HMO' },
+                    { hcid: 'HCID-9150-4003-C', label: 'Mateo Morales', rel: 'Child', plan: 'Gold HMO' },
+                    { hcid: 'HCID-9150-4004-D', label: 'Rosa Morales', rel: 'Parent', plan: 'Gold HMO' },
+                    // Chen Family (EPO)
+                    { hcid: 'HCID-6208-5001-A', label: 'David Chen', rel: 'Primary', plan: 'Premier EPO' },
+                    { hcid: 'HCID-6208-5002-B', label: 'Mei-Ling Chen', rel: 'Spouse', plan: 'Premier EPO' },
+                    { hcid: 'HCID-6208-5003-C', label: 'Daniel Chen', rel: 'Child', plan: 'Premier EPO' },
+                    { hcid: 'HCID-6208-5004-D', label: 'Wei-Hsin Chen', rel: 'Parent', plan: 'Premier EPO' },
+                  ].map((sample) => (
+                    <button
+                      key={sample.hcid}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(sample.hcid);
+                        executeServiceSearch(sample.hcid);
+                      }}
+                      className={`px-2.5 py-1 rounded-md border font-mono text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        searchQuery === sample.hcid
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs ring-1 ring-blue-400'
+                          : 'bg-white hover:bg-blue-50 text-blue-800 border-blue-200 shadow-2xs hover:border-blue-400'
+                      }`}
+                    >
+                      <span>{sample.hcid}</span>
+                      <span className={`text-[10px] font-sans px-1 rounded ${searchQuery === sample.hcid ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600'}`}>
+                        {sample.label} ({sample.rel})
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Master Eligibility Directory Table Toggle */}
+              <div className="pt-1 border-t border-blue-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectoryTable(!showDirectoryTable)}
+                  className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{showDirectoryTable ? '▲ Hide Master Eligibility Directory Table' : '▼ View All 5 Households & HCIDs Master Table (Reference Data)'}</span>
+                </button>
+                <span className="text-[10px] text-slate-500 font-mono">5 Master Units · 21 Covered Members</span>
+              </div>
+
+              {showDirectoryTable && (
+                <div className="mt-2 bg-white rounded-lg border border-blue-200 overflow-x-auto text-xs shadow-xs animate-in fade-in duration-150">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-blue-50/70 border-b border-blue-200 text-[11px] font-bold text-blue-900">
+                        <th className="p-2.5">Household / Policy</th>
+                        <th className="p-2.5">Member Name</th>
+                        <th className="p-2.5">HCID</th>
+                        <th className="p-2.5">Role</th>
+                        <th className="p-2.5">Member ID</th>
+                        <th className="p-2.5 text-right">Quick Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[11px]">
+                      {INITIAL_CUSTOMERS.flatMap((c) =>
+                        [c.primarySubscriber, ...c.dependents].map((m) => (
+                          <tr key={m.hcid} className="hover:bg-blue-50/40 transition-colors">
+                            <td className="p-2 font-mono text-[10px] text-slate-600">
+                              <span className="font-bold text-slate-800">{c.familyHcid}</span>
+                              <span className="block text-slate-400">{c.familyPolicyNumber}</span>
+                            </td>
+                            <td className="p-2 font-medium text-slate-900">
+                              {m.firstName} {m.lastName}
+                            </td>
+                            <td className="p-2 font-mono font-bold text-blue-700">
+                              {m.hcid}
+                            </td>
+                            <td className="p-2">
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                                  m.relationship === 'PRIMARY_SUBSCRIBER'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : m.relationship === 'SPOUSE'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : m.relationship === 'CHILD'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {m.relationship.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="p-2 font-mono text-slate-500">{m.memberId}</td>
+                            <td className="p-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery(m.hcid);
+                                  executeServiceSearch(m.hcid);
+                                }}
+                                className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold cursor-pointer shadow-2xs"
+                              >
+                                Select & Search
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Service Status Indicator */}
               <div className="text-[11px] text-slate-600 flex items-center gap-1.5 pt-1">
