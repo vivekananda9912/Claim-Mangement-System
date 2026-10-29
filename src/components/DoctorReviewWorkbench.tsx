@@ -19,9 +19,10 @@ import {
 
 interface DoctorReviewWorkbenchProps {
   onSelectCase: (caseId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ onSelectCase }) => {
+export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ onSelectCase, onOpenTask }) => {
   const { cases, claims, doctors, evidences, doctorAdjudicateClaim, currentRole, setRole } = useClaimsStore();
   const [selectedDoctorId, setSelectedDoctorId] = useState('DOC-DR-CHEN');
 
@@ -32,7 +33,36 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
   // Active reviewing case
   const [reviewCaseId, setReviewCaseId] = useState<string>(clinicalCases[0]?._id || '');
   const activeCase = cases.find((c) => c._id === reviewCaseId);
-  const claim = claims.find((c) => c.caseId === reviewCaseId);
+  const claim = claims.find((c) => c.caseId === reviewCaseId || (activeCase && (c.claimId === activeCase.claimId || c._id === activeCase.claimId))) || (activeCase ? {
+    _id: `claim-${activeCase._id}`,
+    claimId: activeCase.claimId,
+    caseId: activeCase._id,
+    provider: {
+      npi: '1492019482',
+      name: 'Advanced Diagnostic Imaging Institute',
+      facilityType: 'SPECIALTY_CLINIC' as const,
+      address: '450 West Roosevelt Rd, Chicago, IL',
+    },
+    serviceDate: '2026-03-20T10:00:00Z',
+    totalBilledAmount: activeCase.financials.totalBilled || 2100.0,
+    items: [
+      {
+        itemId: 'ITM-DOC-01',
+        code: activeCase.category === 'BEHAVIORAL_HEALTH' ? 'CPT-90834' : 'CPT-70553',
+        description: activeCase.category === 'BEHAVIORAL_HEALTH'
+          ? 'Psychotherapy, 45 minutes with patient'
+          : 'Magnetic resonance imaging, brain; with and without contrast',
+        category: activeCase.category || 'MEDICAL',
+        startDate: '2026-03-20',
+        billedAmount: activeCase.financials.totalBilled || 2100.0,
+        allowableAmount: activeCase.financials.allowableAmount || 1450.0,
+        copay: 35.0,
+        coinsurance: 283.0,
+        eligiblePayout: 1132.0,
+        clinicalDecision: 'PENDING' as const,
+      },
+    ],
+  } : null);
   const caseEvidences = evidences.filter((e) => e.caseId === reviewCaseId);
 
   // Adjudication form state
@@ -183,13 +213,25 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
                   </h4>
                 </div>
 
-                <button
-                  onClick={() => onSelectCase(activeCase._id)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
-                >
-                  <span>Open 360° Case</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {onOpenTask && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenTask(activeCase._id)}
+                      className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Stethoscope className="w-3.5 h-3.5" />
+                      <span>View Task</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onSelectCase(activeCase._id)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Open 360° Case</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Attached DCN Evidence Quick Inspect */}

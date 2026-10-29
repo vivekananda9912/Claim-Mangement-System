@@ -314,7 +314,7 @@ async function runTestSuite() {
     doctorActor
   );
 
-  assert(settledCase.currentStage === 6, 'Case finalized and transitioned to Stage 6 Closed & Archived');
+  assert(settledCase.currentStage === 6, 'Case finalized and transitioned to Stage 6 Resolved');
   assert(settledCase.status === 'APPROVED', 'Final case status is APPROVED');
   assert(!!settledCase.settlementVoucher, 'Settlement voucher generated');
   assert(settledCase.settlementVoucher?.checkNumberOrEft === 'EFT-TRACE-99281920', 'EFT trace number recorded');

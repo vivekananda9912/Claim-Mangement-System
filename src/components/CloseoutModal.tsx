@@ -72,39 +72,39 @@ export const CloseoutModal: React.FC<CloseoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-emerald-50/70 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                Stage 05 · Closeout & Settlement
-              </span>
-              <span className="text-slate-400">·</span>
-              <span className="font-mono text-xs font-bold text-slate-700">
-                {activeCase.caseNumber}
-              </span>
-            </div>
-            <h2 className="text-base font-bold text-slate-900 mt-0.5">
-              Closeout Screen: Finalize Accounting & Authorize Case Closure
-            </h2>
-            <p className="text-xs text-slate-600">
-              Review adjudicated physician decisions, balance net financial allocations, and dispatch electronic payment voucher to seal this case into Stage 06.
-            </p>
+    <div className="fixed inset-0 z-50 bg-slate-50 text-slate-900 flex flex-col h-screen overflow-hidden font-sans animate-in fade-in duration-200">
+      {/* Full Screen Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-2xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+              Stage 05 · Closeout & Settlement
+            </span>
+            <span className="text-slate-400">·</span>
+            <span className="font-mono text-xs font-bold text-slate-700">
+              {activeCase.caseNumber}
+            </span>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-            title="Cancel and Return"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <h2 className="text-base font-bold text-slate-900 mt-0.5">
+            Closeout Screen: Finalize Accounting & Authorize Case Resolution
+          </h2>
+          <p className="text-xs text-slate-500">
+            Review adjudicated physician decisions, balance net financial allocations, and dispatch electronic payment voucher to transition this case to Stage 06: Resolved.
+          </p>
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs">
+        <button
+          onClick={onClose}
+          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+          title="Cancel and Return"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </header>
+
+      {/* Scrollable Content Body */}
+      <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="max-w-4xl mx-auto space-y-6 text-xs">
           {/* Section 1: Adjudication Decision Recap */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
@@ -367,51 +367,51 @@ export const CloseoutModal: React.FC<CloseoutModalProps> = ({
                   className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="text-slate-700 text-xs">
-                  Authorize payment voucher disbursement and seal case in <strong>Stage 06: Closed & Archived</strong>
+                  Authorize payment voucher disbursement and transition case to <strong>Stage 06: Resolved</strong>
                 </span>
               </label>
             </div>
           </div>
         </div>
+      </main>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
-            {allChecksAffirmed ? (
-              <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                <CheckCircle2 className="w-4 h-4" /> Ready to disburse voucher & close case.
-              </span>
-            ) : (
-              <span className="text-amber-700 font-semibold">
-                Please complete all 3 sign-off checkboxes to authorize closeout.
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer transition-colors"
-            >
-              Cancel
-            </button>
-
-            <button
-              disabled={!allChecksAffirmed || isSubmitting}
-              onClick={handleExecuteCloseout}
-              className={`px-5 py-2.5 rounded-lg text-xs font-bold text-white shadow-md flex items-center gap-2 transition-all cursor-pointer ${
-                allChecksAffirmed && !isSubmitting
-                  ? 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg active:scale-95'
-                  : 'bg-slate-300 cursor-not-allowed opacity-60'
-              }`}
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>Authorize Voucher & Close Case (Stage 06)</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+      {/* Sticky Bottom Action Bar */}
+      <footer className="sticky bottom-0 z-40 bg-white border-t border-slate-200 px-6 py-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="text-xs text-slate-500">
+          {allChecksAffirmed ? (
+            <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Ready to disburse voucher & resolve case.
+            </span>
+          ) : (
+            <span className="text-amber-700 font-semibold">
+              Please complete all 3 sign-off checkboxes to authorize resolution.
+            </span>
+          )}
         </div>
-      </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs cursor-pointer transition-colors"
+          >
+            Cancel
+          </button>
+
+          <button
+            disabled={!allChecksAffirmed || isSubmitting}
+            onClick={handleExecuteCloseout}
+            className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
+              allChecksAffirmed && !isSubmitting
+                ? 'bg-emerald-600 hover:bg-emerald-700'
+                : 'bg-slate-300 cursor-not-allowed opacity-60'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>Authorize Voucher & Resolve Case (Stage 06)</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 };

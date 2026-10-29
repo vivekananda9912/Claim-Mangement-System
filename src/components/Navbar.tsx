@@ -15,6 +15,7 @@ import {
   UserCheck,
   ShieldCheck,
   RotateCcw,
+  Home,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -22,6 +23,7 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   onOpenNewCase: () => void;
   onLogout?: () => void;
+  onGoHome?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   onOpenNewCase,
   onLogout,
+  onGoHome,
 }) => {
   const { currentRole, resetToSeeds } = useClaimsStore();
   const currentPersona = USER_PERSONAS[currentRole] || USER_PERSONAS.OPERATIONS_ANALYST;
@@ -65,16 +68,32 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
       <div className="px-6 py-3 flex items-center justify-between gap-4">
-        {/* Left: Clean Brand Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-            CM
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-900 tracking-tight leading-none">
-              Claim Management
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Claims Operations & Adjudication</p>
+        {/* Left: Home Icon & Brand Wordmark */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            id="nav-home-btn"
+            type="button"
+            onClick={onGoHome}
+            title="Go to Home / Cockpit"
+            className="p-2 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all cursor-pointer shadow-2xs"
+          >
+            <Home className="w-4 h-4" />
+          </button>
+
+          <div
+            id="nav-brand-btn"
+            onClick={onGoHome}
+            className="flex items-center gap-2.5 cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              CM
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-none">
+                Claim Management
+              </h1>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Claims Operations & Adjudication</p>
+            </div>
           </div>
         </div>
 
@@ -86,6 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             return (
               <button
                 key={item.id}
+                id={`nav-tab-${item.id}`}
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                   isActive
@@ -110,6 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Intake New Case CTA (Only for Analyst, hidden for Doctor) */}
           {!isDoctor && (
             <button
+              id="nav-intake-case-btn"
               onClick={onOpenNewCase}
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer hover:shadow-sm"
             >
@@ -142,6 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Log Out Button */}
             {onLogout && (
               <button
+                id="nav-logout-btn"
                 onClick={onLogout}
                 title="Log Out to Switch Role"
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer font-medium ml-1"

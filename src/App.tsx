@@ -25,7 +25,7 @@ export default function App() {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showIntakeModal, setShowIntakeModal] = useState<boolean>(false);
 
-  const { currentRole, setRole } = useClaimsStore();
+  const { currentRole, setRole, cases } = useClaimsStore();
 
   const handleLogin = (role: UserRole) => {
     setRole(role);
@@ -46,6 +46,22 @@ export default function App() {
     localStorage.removeItem('omniclaim_logged_in');
   };
 
+  const handleGoHome = () => {
+    setSelectedCaseId(null);
+    setActiveTaskId(null);
+    if (currentRole === 'DOCTOR_APPROVER') {
+      setActiveTab('doctor');
+    } else {
+      setActiveTab('cases');
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    setSelectedCaseId(null);
+    setActiveTaskId(null);
+    setActiveTab(tab);
+  };
+
   const handleCaseCreated = (caseId: string) => {
     setShowIntakeModal(false);
     setSelectedCaseId(caseId);
@@ -57,117 +73,129 @@ export default function App() {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
-  // When working on task, open it in a dedicated new full page
-  if (activeTaskId) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-        <TaskWorkspaceView
-          taskId={activeTaskId}
-          onBack={() => setActiveTaskId(null)}
-          onOpenCase={(caseId) => {
-            setActiveTaskId(null);
-            setSelectedCaseId(caseId);
-          }}
-        />
-        <StageFeedbackModal
-          onOpenTask={(tid) => {
-            setActiveTaskId(tid);
-          }}
-          onOpenCase={(cid) => {
-            setActiveTaskId(null);
-            setSelectedCaseId(cid);
-          }}
-          onCloseAll={() => {
-            setActiveTaskId(null);
-            setSelectedCaseId(null);
-          }}
-        />
-      </div>
-    );
-  }
+  // Active viewing case (if any)
+  const activeViewingCase = selectedCaseId ? cases.find((c) => c._id === selectedCaseId) : null;
 
-  // When working on stages screen, take the FULL SCREEN instead of modal or popup
-  if (selectedCaseId) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-        <CaseDetailView
-          caseId={selectedCaseId}
-          onClose={() => setSelectedCaseId(null)}
-          onOpenTask={(taskId) => {
-            setSelectedCaseId(null);
-            setActiveTaskId(taskId);
-          }}
-        />
-        <StageFeedbackModal
-          onOpenTask={(tid) => {
-            setSelectedCaseId(null);
-            setActiveTaskId(tid);
-          }}
-          onOpenCase={(cid) => {
-            setSelectedCaseId(cid);
-          }}
-          onCloseAll={() => {
-            setSelectedCaseId(null);
-            setActiveTaskId(null);
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Clean Default App Viewport
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
-      {/* Clean Top Navigation Bar with Global Search, Member Search, Profile & Logout */}
+      {/* Top Persistent Navigation Bar with Home Icon, Global Search, Member Search, Profile & Logout */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         onOpenNewCase={() => setShowIntakeModal(true)}
         onLogout={handleLogout}
+        onGoHome={handleGoHome}
       />
 
-      {/* Main Viewport Content - Clean, Uncluttered Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
-        {/* Tab 1: Global Search & Workbasket Table */}
-        {(activeTab === 'cases' || activeTab === 'global_search') && (
-          <CasesCockpit
-            onSelectCase={(id) => setSelectedCaseId(id)}
-            onOpenNewCase={() => setShowIntakeModal(true)}
-            onOpenTask={(tid) => setActiveTaskId(tid)}
+      {/* Case Stages Sub-bar directly under navbar (shown when viewing a case) */}
+      {activeViewingCase && (
+        <div className="bg-slate-900 text-white px-6 py-2.5 border-b border-slate-800 shadow-xs flex items-center justify-between gap-4 overflow-x-auto text-xs z-30">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="font-mono font-bold text-blue-400">{activeViewingCase.caseNumber}</span>
+            <span className="text-slate-600">·</span>
+            <span className="text-slate-300 font-medium">{activeViewingCase.patientName}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto shrink-0 py-0.5">
+            {[
+              { num: 1, label: '01. Capture Request' },
+              { num: 2, label: '02. Initial Review' },
+              { num: 3, label: '03. Claim & Auth Evidence' },
+              { num: 4, label: '04. Decision Stage' },
+              { num: 5, label: '05. Closeout & Settlement' },
+              { num: 6, label: '06. Resolved' },
+            ].map((st, idx) => {
+              const isPast = activeViewingCase.currentStage > st.num;
+              const isCurrent = activeViewingCase.currentStage === st.num;
+              return (
+                <React.Fragment key={st.num}>
+                  <div
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                      isCurrent
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : isPast
+                        ? 'text-emerald-400 bg-slate-800/80'
+                        : 'text-slate-400 bg-slate-800/30'
+                    }`}
+                  >
+                    <span>{isPast ? '✓' : st.num}</span>
+                    <span>{st.label}</span>
+                  </div>
+                  {idx < 5 && <span className="text-slate-700 text-[10px]">→</span>}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Viewport Content */}
+      {activeTaskId ? (
+        <div className="flex-1 flex flex-col">
+          <TaskWorkspaceView
+            taskId={activeTaskId}
+            onBack={() => setActiveTaskId(null)}
+            onOpenCase={(caseId) => {
+              setActiveTaskId(null);
+              setSelectedCaseId(caseId);
+            }}
           />
-        )}
-
-        {/* Tab 2: Member & Household Directory Search */}
-        {activeTab === 'member_search' && (
-          <MemberSearchView
-            onStartIntake={() => setShowIntakeModal(true)}
-            onSelectCase={(id) => setSelectedCaseId(id)}
+        </div>
+      ) : selectedCaseId ? (
+        <div className="flex-1 flex flex-col">
+          <CaseDetailView
+            caseId={selectedCaseId}
+            onClose={() => setSelectedCaseId(null)}
+            onOpenTask={(taskId) => {
+              setSelectedCaseId(null);
+              setActiveTaskId(taskId);
+            }}
           />
-        )}
+        </div>
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-6">
+          {/* Tab 1: Global Search & Workbasket Table */}
+          {(activeTab === 'cases' || activeTab === 'global_search') && (
+            <CasesCockpit
+              onSelectCase={(id) => setSelectedCaseId(id)}
+              onOpenNewCase={() => setShowIntakeModal(true)}
+              onOpenTask={(tid) => setActiveTaskId(tid)}
+            />
+          )}
 
-        {/* Tab 3: Doctor Clinical Desk (Accessible for Doctor role) */}
-        {activeTab === 'doctor' && (
-          <DoctorReviewWorkbench onSelectCase={(id) => setSelectedCaseId(id)} />
-        )}
+          {/* Tab 2: Member & Household Directory Search */}
+          {activeTab === 'member_search' && (
+            <MemberSearchView
+              onStartIntake={() => setShowIntakeModal(true)}
+              onSelectCase={(id) => setSelectedCaseId(id)}
+            />
+          )}
 
-        {/* Tab 4: Direct Intake Wizard (if triggered via tab) */}
-        {activeTab === 'intake' && (
-          <PolicyIntakeWizard
-            onCaseCreated={handleCaseCreated}
-            onCancel={() => setActiveTab('cases')}
-          />
-        )}
-      </main>
+          {/* Tab 3: Doctor Clinical Desk (Accessible for Doctor role) */}
+          {activeTab === 'doctor' && (
+            <DoctorReviewWorkbench
+              onSelectCase={(id) => setSelectedCaseId(id)}
+              onOpenTask={(tid) => setActiveTaskId(tid)}
+            />
+          )}
 
-      {/* Standalone Intake Wizard Modal */}
-      {showIntakeModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+          {/* Tab 4: Direct Intake Wizard (if triggered via tab) */}
+          {activeTab === 'intake' && (
             <PolicyIntakeWizard
               onCaseCreated={handleCaseCreated}
-              onCancel={() => setShowIntakeModal(false)}
+              onCancel={() => setActiveTab('cases')}
             />
-          </div>
+          )}
+        </main>
+      )}
+
+      {/* Standalone Full Screen Intake Wizard Modal */}
+      {showIntakeModal && (
+        <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col h-screen overflow-y-auto animate-in fade-in duration-200">
+          <PolicyIntakeWizard
+            onCaseCreated={handleCaseCreated}
+            onCancel={() => setShowIntakeModal(false)}
+          />
         </div>
       )}
 
@@ -186,18 +214,6 @@ export default function App() {
           setSelectedCaseId(null);
         }}
       />
-
-      {/* Clean Enterprise Footer */}
-      <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 mt-auto">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-700">Claim Management</span>
-          <span>·</span>
-          <span>Operations & Clinical Adjudication</span>
-        </div>
-        <div className="text-[11px] text-slate-400">
-          Role-Governed Workflow
-        </div>
-      </footer>
     </div>
   );
 }

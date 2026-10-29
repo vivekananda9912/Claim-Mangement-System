@@ -25,6 +25,7 @@ import {
   Filter,
   Stethoscope,
   Lock,
+  Copy,
 } from 'lucide-react';
 
 interface CasesCockpitProps {
@@ -105,7 +106,7 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
       case 5:
         return { label: '05. Closeout & Settlement', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
       case 6:
-        return { label: '06. Closed & Archived', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        return { label: '06. Resolved', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
       default:
         return { label: `Stage ${stage}`, color: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
@@ -444,6 +445,14 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
                             <span>·</span>
                             <span>{c.claimType === 'PRE_SERVICE' ? 'Pre-Auth' : 'Post-Service'}</span>
                           </div>
+                          {c.tags.includes('Duplicate Checked & Resolved') && (
+                            <div className="mt-1">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
+                                <Copy className="w-3 h-3 text-purple-700" />
+                                <span>Duplicate Checked · Resolved</span>
+                              </span>
+                            </div>
+                          )}
                         </td>
 
                         {/* Patient & HCID */}

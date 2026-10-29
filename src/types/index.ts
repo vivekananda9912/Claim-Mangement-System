@@ -25,6 +25,7 @@ export type CaseStage =
   | 'CLAIM_AUTH_EVIDENCE'
   | 'DECISION_STAGE'
   | 'CLOSEOUT_SETTLEMENT'
+  | 'RESOLVED'
   | 'CLOSED_ARCHIVED'
   | 'INTAKE_INGESTION'
   | 'POLICY_ELIGIBILITY'
@@ -50,6 +51,7 @@ export type CaseStatus =
   | 'PARTIALLY_APPROVED'
   | 'DENIED'
   | 'SETTLED'
+  | 'RESOLVED'
   | 'CLOSED';
 
 export type PriorityLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';

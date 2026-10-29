@@ -36,7 +36,7 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
   onStartIntake,
   onSelectCase,
 }) => {
-  const { customers, policies, cases, currentRole } = useClaimsStore();
+  const { customers, policies, cases, claims, currentRole } = useClaimsStore();
   const isDoctor = currentRole === 'DOCTOR_APPROVER';
 
   const [query, setQuery] = useState('');
@@ -143,6 +143,20 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
     ? cases.filter((c) => c.familyPolicyNumber === matchedCustomer.familyPolicyNumber)
     : [];
 
+  // Find claims for the matched customer & household
+  const matchedMemberClaims = matchedCustomer
+    ? claims.filter((cl) => {
+        const inCustomerPolicy =
+          cl.caseId.includes(matchedCustomer.familyPolicyNumber) ||
+          cl.caseId.includes(matchedCustomer._id) ||
+          cl.caseId.includes(matchedCustomer.familyHcid);
+        const inRelatedCases = relatedCases.some(
+          (rc) => rc.claimId === cl.claimId || rc._id === cl.caseId
+        );
+        return inCustomerPolicy || inRelatedCases;
+      })
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Header & Search Controls */}
@@ -170,6 +184,7 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
+              id="member-search-input"
               type="text"
               placeholder="Search by Member HCID (e.g. HCID-8492-1001-A), Full Name (e.g. Eleanor Vance), or Policy Number..."
               value={query}
@@ -184,6 +199,7 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
           </div>
 
           <button
+            id="member-search-submit-btn"
             onClick={() => executeSearch()}
             disabled={isSearching}
             className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
@@ -191,26 +207,6 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
             <Search className="w-3.5 h-3.5" />
             <span>{isSearching ? 'Searching...' : 'Search Member'}</span>
           </button>
-        </div>
-
-        {/* Quick Demo Preset Chips */}
-        <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[11px] font-semibold text-slate-500">Search Presets:</span>
-          {[
-            { label: 'Eleanor Vance (Primary)', hcid: 'HCID-8492-1001-A' },
-            { label: 'Arthur Pendleton (Primary)', hcid: 'HCID-4410-2001-A' },
-            { label: 'Robert Chen (Primary)', hcid: 'HCID-7721-3001-A' },
-            { label: 'Carlos Morales (Primary)', hcid: 'HCID-9150-4001-A' },
-            { label: 'Leo Vance (Child)', hcid: 'HCID-8492-1003-C' },
-          ].map((preset) => (
-            <button
-              key={preset.hcid}
-              onClick={() => handlePresetSelect(preset.hcid)}
-              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-medium transition-colors cursor-pointer border border-slate-200"
-            >
-              {preset.label}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -550,6 +546,58 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
                           </span>
                           <span className="text-[10px] font-semibold text-blue-700">Open Case →</span>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Claims & Procedure Line Items */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-2 font-bold text-slate-900 text-xs">
+                    <CreditCard className="w-4 h-4 text-emerald-600" />
+                    <span>Claims & Procedure Line Items ({matchedMemberClaims.length})</span>
+                  </div>
+                </div>
+
+                {matchedMemberClaims.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-2">No previous claims on file for this subscriber.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {matchedMemberClaims.map((cl) => (
+                      <div key={cl._id} className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-mono font-bold text-slate-900">{cl.claimId}</span>
+                            <span className="text-slate-400 mx-1.5">·</span>
+                            <span className="text-slate-700 font-medium">{cl.provider.name}</span>
+                          </div>
+                          <span className="font-mono font-bold text-emerald-700">
+                            ${cl.totalBilledAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Date of Service: {cl.serviceDate.slice(0, 10)} · Provider NPI: <span className="font-mono">{cl.provider.npi}</span>
+                        </div>
+                        {cl.items && cl.items.length > 0 && (
+                          <div className="pt-2 border-t border-slate-200/80 space-y-1">
+                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">
+                              Claim Procedure Lines ({cl.items.length})
+                            </span>
+                            {cl.items.map((itm) => (
+                              <div key={itm.itemId} className="flex items-center justify-between text-[11px] bg-white p-2 rounded border border-slate-200">
+                                <div>
+                                  <span className="font-mono font-bold text-blue-700">{itm.code}</span>
+                                  <span className="text-slate-700 ml-1.5">{itm.description}</span>
+                                </div>
+                                <span className="font-mono font-semibold text-slate-900">
+                                  ${itm.billedAmount.toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

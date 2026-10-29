@@ -28,6 +28,7 @@ import {
   FileCheck,
   ArrowLeft,
   Lock,
+  Copy,
 } from 'lucide-react';
 import { OpenReviewModal } from './OpenReviewModal';
 import { CloseoutModal } from './CloseoutModal';
@@ -109,7 +110,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
     { num: 3, label: '03. Claim & Auth Evidence' },
     { num: 4, label: '04. Decision Stage' },
     { num: 5, label: '05. Closeout & Settlement' },
-    { num: 6, label: '06. Closed & Archived' },
+    { num: 6, label: '06. Resolved' },
   ];
 
   const activePendingTask = tasks.find((t) => t.status !== 'COMPLETED' && t.status !== 'RESOLVED');
@@ -139,7 +140,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
             </span>
             <span
               className={`text-xs px-2.5 py-0.5 rounded font-semibold border ${
-                activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED'
+                activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED' || activeCase.status === 'RESOLVED'
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : activeCase.status === 'IN_REVIEW' || activeCase.status === 'FRAUD_HOLD'
                   ? 'bg-rose-50 text-rose-700 border-rose-200'
@@ -148,11 +149,29 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
             >
               {activeCase.status.replace('_', ' ')}
             </span>
+
+            {activeCase.tags.includes('Duplicate Checked & Resolved') && (
+              <span className="text-xs px-2.5 py-0.5 rounded font-bold border bg-purple-50 text-purple-800 border-purple-200 flex items-center gap-1 shadow-2xs">
+                <Copy className="w-3.5 h-3.5 text-purple-700" />
+                <span>Duplicate Checked · Resolved</span>
+              </span>
+            )}
           </div>
         </div>
 
         {/* Header Right Action Group */}
         <div className="flex items-center gap-2">
+          {/* Direct Open Review Screen CTA */}
+          <button
+            id="case-detail-open-review-btn"
+            onClick={() => setShowOpenReviewModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+            title="Open Full-Screen Review & Duplicate Engine"
+          >
+            <FileText className="w-3.5 h-3.5 text-blue-600" />
+            <span>Open Review Screen</span>
+          </button>
+
           {activeCase.currentStage === 4 && activePendingTask && onOpenTask && (
             currentRole === 'DOCTOR_APPROVER' ? (
               <button
@@ -192,9 +211,19 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
           {stagesList.map((st, idx) => {
             const isCompleted = activeCase.currentStage > st.num;
             const isCurrent = activeCase.currentStage === st.num;
+            const isClickable = st.num === 2 || st.num === 5;
             return (
               <React.Fragment key={st.num}>
-                <div className="flex items-center gap-2 shrink-0 py-1">
+                <div
+                  onClick={() => {
+                    if (st.num === 2) setShowOpenReviewModal(true);
+                    if (st.num === 5) setShowCloseoutModal(true);
+                  }}
+                  className={`flex items-center gap-2 shrink-0 py-1 ${
+                    isClickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  }`}
+                  title={st.num === 2 ? 'Click to open Stage 02 Review' : st.num === 5 ? 'Click to open Closeout & Settlement' : undefined}
+                >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
                       isCompleted
@@ -372,7 +401,7 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
           <div className="p-3.5 rounded-lg bg-slate-200/70 border border-slate-300 text-xs flex items-center gap-2 text-slate-700 font-medium">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              Stage 06 Case Sealed & Closed: Adjudication finalized, voucher disbursed, and full append-only BSON event log sealed.
+              Stage 06 Case Resolved: Adjudication finalized, settlement disbursed, and case records sealed.
             </span>
           </div>
         )}

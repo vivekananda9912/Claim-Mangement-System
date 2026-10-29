@@ -35,6 +35,11 @@ import {
   INITIAL_EVENTS,
 } from '../data/mockData';
 import {
+  EXTENDED_CUSTOMERS,
+  EXTENDED_POLICIES,
+  EXTENDED_CLAIMS,
+} from '../data/extendedMembers';
+import {
   DuplicateCheckRule,
   PolicyEligibilityRule,
   DcnAuditRule,
@@ -43,11 +48,11 @@ import {
 
 class ClaimsEngine {
   private currentRole: UserRole = 'PROCESS_OWNER';
-  private customers: Customer[] = [...INITIAL_CUSTOMERS];
-  private policies: Policy[] = [...INITIAL_POLICIES];
+  private customers: Customer[] = [...INITIAL_CUSTOMERS, ...EXTENDED_CUSTOMERS];
+  private policies: Policy[] = [...INITIAL_POLICIES, ...EXTENDED_POLICIES];
   private doctors: DoctorProfile[] = [...INITIAL_DOCTORS];
   private cases: Case[] = [...INITIAL_CASES];
-  private claims: Claim[] = [...INITIAL_CLAIMS];
+  private claims: Claim[] = [...INITIAL_CLAIMS, ...EXTENDED_CLAIMS];
   private tasks: CaseTask[] = [...INITIAL_TASKS];
   private evidences: CaseEvidence[] = [...INITIAL_EVIDENCES];
   private fraudAssessments: FraudAssessment[] = [...INITIAL_FRAUD_ASSESSMENTS];
@@ -65,17 +70,18 @@ class ClaimsEngine {
     try {
       localStorage.removeItem('omniclaim_state_v1');
       localStorage.removeItem('omniclaim_state_v2');
+      localStorage.removeItem('omniclaim_state_v3');
     } catch {}
 
-    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('omniclaim_state_v3') : null;
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('omniclaim_state_v4') : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.cases && parsed.claims) {
-          // Verify that cached customers have valid HCIDs across all 5 households
+          // Verify that cached customers have valid HCIDs across all 60+ households
           const hasValidHcid =
             Array.isArray(parsed.customers) &&
-            parsed.customers.length >= 5 &&
+            parsed.customers.length >= 60 &&
             parsed.customers.every(
               (c: any) =>
                 c.familyHcid &&
@@ -84,11 +90,13 @@ class ClaimsEngine {
                 c.dependents.every((d: any) => d.hcid)
             );
 
-          this.customers = hasValidHcid ? parsed.customers : [...INITIAL_CUSTOMERS];
-          this.policies = hasValidHcid && parsed.policies ? parsed.policies : [...INITIAL_POLICIES];
+          this.customers = hasValidHcid ? parsed.customers : [...INITIAL_CUSTOMERS, ...EXTENDED_CUSTOMERS];
+          this.policies = hasValidHcid && parsed.policies && parsed.policies.length >= 60 ? parsed.policies : [...INITIAL_POLICIES, ...EXTENDED_POLICIES];
           this.doctors = parsed.doctors || this.doctors;
-          this.cases = parsed.cases || this.cases;
-          this.claims = parsed.claims || this.claims;
+          const existingIds = new Set((parsed.cases || []).map((c: any) => c._id));
+          const missingInitialCases = INITIAL_CASES.filter((ic) => !existingIds.has(ic._id));
+          this.cases = [...(parsed.cases || []), ...missingInitialCases];
+          this.claims = hasValidHcid && parsed.claims && parsed.claims.length >= 60 ? parsed.claims : [...INITIAL_CLAIMS, ...EXTENDED_CLAIMS];
           this.tasks = parsed.tasks || this.tasks;
           this.evidences = parsed.evidences || this.evidences;
           this.fraudAssessments = parsed.fraudAssessments || this.fraudAssessments;
@@ -105,7 +113,7 @@ class ClaimsEngine {
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(
-          'omniclaim_state_v3',
+          'omniclaim_state_v4',
           JSON.stringify({
             customers: this.customers,
             policies: this.policies,
@@ -257,7 +265,10 @@ class ClaimsEngine {
   }
 
   public getClaimForCase(caseId: string) {
-    return this.claims.find((c) => c.caseId === caseId);
+    const c = this.cases.find((cs) => cs._id === caseId || cs.caseNumber === caseId);
+    return this.claims.find(
+      (cl) => cl.caseId === caseId || (c && (cl.claimId === c.claimId || cl._id === c.claimId))
+    );
   }
 
   public getTasksForCase(caseId: string) {
@@ -963,10 +974,10 @@ class ClaimsEngine {
 
     targetCase.financials.netPayout = params.authorizedAmount;
 
-    // Advance Stage 5 -> 6 (Closed & Archived)
+    // Advance Stage 5 -> 6 (Resolved)
     targetCase.currentStage = 6;
-    targetCase.stageName = 'CLOSED_ARCHIVED';
-    targetCase.status = 'SETTLED';
+    targetCase.stageName = 'RESOLVED';
+    targetCase.status = 'RESOLVED';
 
     // Update policy accumulated financials
     if (policy) {
@@ -997,7 +1008,7 @@ class ClaimsEngine {
       targetCase._id,
       targetCase.caseNumber,
       'CASE_CLOSED',
-      `Case ${targetCase.caseNumber} closed and permanently archived with full event audit stream preserved.`,
+      `Case ${targetCase.caseNumber} resolved and sealed with full event audit stream preserved.`,
       { closedAt: new Date().toISOString() }
     );
 
@@ -1006,9 +1017,9 @@ class ClaimsEngine {
       caseNumber: targetCase.caseNumber,
       fromStage: 5,
       toStage: 6,
-      stageName: 'Stage 6: Closed & Archived',
-      title: 'Settlement Voucher Disbursed · Case Sealed (Stage 06)',
-      summary: `Electronic payment voucher for $${params.authorizedAmount.toFixed(2)} disbursed via ${params.paymentMethod}. Case ${targetCase.caseNumber} has been sealed into the immutable BSON event store.`,
+      stageName: 'Stage 6: Resolved',
+      title: 'Settlement Voucher Disbursed · Case Resolved (Stage 06)',
+      summary: `Electronic payment voucher for $${params.authorizedAmount.toFixed(2)} disbursed via ${params.paymentMethod}. Case ${targetCase.caseNumber} has been resolved successfully.`,
       actor: {
         name: USER_PERSONAS[this.currentRole].name,
         role: this.currentRole,
@@ -1040,14 +1051,15 @@ class ClaimsEngine {
     }
 
     if (isDismissedAsDuplicate) {
-      targetCase.status = 'DENIED';
+      targetCase.status = 'CLOSED';
       targetCase.currentStage = 6;
-      targetCase.stageName = 'CLOSED_ARCHIVED';
+      targetCase.stageName = 'RESOLVED';
+      targetCase.tags = Array.from(new Set([...targetCase.tags, 'Duplicate Flag', 'Duplicate Checked & Resolved']));
       this.appendEvent(
         targetCase._id,
         targetCase.caseNumber,
         'CASE_CLOSED',
-        `Duplicate claim confirmed and rejected. Case closed by ${USER_PERSONAS[this.currentRole].name}.`,
+        `Duplicate claim confirmed and rejected. Case closed & resolved by ${USER_PERSONAS[this.currentRole].name}.`,
         { action: 'REJECT_DUPLICATE', notes }
       );
     } else {
@@ -1083,6 +1095,56 @@ class ClaimsEngine {
         },
       };
     }
+
+    this.persist();
+  }
+
+  /**
+   * INTAKE / REVIEW: Close case directly from Open Review if duplicate detected
+   */
+  public closeCaseAsDuplicate(caseId: string, rationale?: string) {
+    const targetCase = this.cases.find((c) => c._id === caseId);
+    if (!targetCase) return;
+
+    targetCase.status = 'CLOSED';
+    targetCase.currentStage = 6;
+    targetCase.stageName = 'RESOLVED';
+    targetCase.tags = Array.from(new Set([...targetCase.tags, 'Duplicate Flag', 'Duplicate Checked & Resolved']));
+
+    // Mark any related duplicate check tasks completed
+    this.tasks
+      .filter((t) => t.caseId === caseId)
+      .forEach((t) => {
+        t.status = 'COMPLETED';
+        t.resolvedAt = new Date().toISOString();
+        t.resolutionNotes = rationale || 'Closed in Stage 02 Open Review due to duplicate collision.';
+      });
+
+    this.appendEvent(
+      targetCase._id,
+      targetCase.caseNumber,
+      'CASE_CLOSED',
+      `Duplicate claim collision confirmed during Stage 02 Initial Review. Case closed & resolved. ${rationale || ''}`,
+      { closedAsDuplicate: true }
+    );
+
+    this.lastStageFeedback = {
+      caseId: targetCase._id,
+      caseNumber: targetCase.caseNumber,
+      fromStage: targetCase.currentStage,
+      toStage: 6,
+      stageName: 'Stage 6: Resolved',
+      title: 'Duplicate Check Resolved · Case Closed (Stage 06)',
+      summary: `Duplicate collision confirmed for case ${targetCase.caseNumber}. The case has been marked as Duplicate Checked & Resolved.`,
+      actor: {
+        name: USER_PERSONAS[this.currentRole].name,
+        role: this.currentRole,
+      },
+      timestamp: new Date().toISOString(),
+      details: {
+        actionTaken: 'Duplicate Checked & Resolved',
+      },
+    };
 
     this.persist();
   }
@@ -1492,5 +1554,6 @@ export function useClaimsStore() {
     confirmInitialReview: claimsEngine.confirmInitialReview.bind(claimsEngine),
     updateClaimServicesAndMember: claimsEngine.updateClaimServicesAndMember.bind(claimsEngine),
     advanceToDecisionStage: claimsEngine.advanceToDecisionStage.bind(claimsEngine),
+    closeCaseAsDuplicate: claimsEngine.closeCaseAsDuplicate.bind(claimsEngine),
   };
 }

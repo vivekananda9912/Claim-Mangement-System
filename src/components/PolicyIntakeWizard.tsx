@@ -385,63 +385,6 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
                 </button>
               </div>
 
-              {/* Quick Sample HCID Presets */}
-              <div className="space-y-1.5 pt-1 border-t border-blue-100">
-                <span className="text-[11px] font-bold text-blue-950 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                  Verified National Directory Test Presets (Click any to load):
-                </span>
-                <div className="flex flex-wrap gap-1.5 text-xs">
-                  {[
-                    // Vance Family (Platinum PPO)
-                    { hcid: 'HCID-8492-1001-A', label: 'Eleanor Vance', rel: 'Primary', plan: 'Platinum PPO' },
-                    { hcid: 'HCID-8492-1002-B', label: 'Arthur/Marcus Vance', rel: 'Spouse', plan: 'Platinum PPO' },
-                    { hcid: 'HCID-8492-1003-C', label: 'Chloe Vance', rel: 'Child', plan: 'Platinum PPO' },
-                    { hcid: 'HCID-8492-1004-D', label: 'Leo Vance', rel: 'Child', plan: 'Platinum PPO' },
-                    { hcid: 'HCID-8492-1005-E', label: 'Margaret/Clara Vance', rel: 'Parent', plan: 'Platinum PPO' },
-                    // Thorne Family (POS)
-                    { hcid: 'HCID-4410-2001-A', label: 'Marcus Thorne', rel: 'Primary', plan: 'Emerald POS' },
-                    { hcid: 'HCID-4410-2002-B', label: 'Helena Thorne', rel: 'Spouse', plan: 'Emerald POS' },
-                    { hcid: 'HCID-4410-2003-C', label: 'Lucas/Maya Thorne', rel: 'Child', plan: 'Emerald POS' },
-                    { hcid: 'HCID-4410-2004-D', label: 'George Thorne', rel: 'Parent', plan: 'Emerald POS' },
-                    // Sterling Family (HDHP)
-                    { hcid: 'HCID-7721-3001-A', label: 'Julian Sterling', rel: 'Primary', plan: 'Sterling HDHP' },
-                    { hcid: 'HCID-7721-3002-B', label: 'Claire Sterling', rel: 'Spouse', plan: 'Sterling HDHP' },
-                    { hcid: 'HCID-7721-3003-C', label: 'Oliver/Lucas Sterling', rel: 'Child', plan: 'Sterling HDHP' },
-                    { hcid: 'HCID-7721-3005-E', label: 'Evelyn Sterling', rel: 'Parent', plan: 'Sterling HDHP' },
-                    // Morales Family (HMO)
-                    { hcid: 'HCID-9150-4001-A', label: 'Carlos Morales', rel: 'Primary', plan: 'Gold HMO' },
-                    { hcid: 'HCID-9150-4002-B', label: 'Sofia Morales', rel: 'Spouse', plan: 'Gold HMO' },
-                    { hcid: 'HCID-9150-4003-C', label: 'Mateo Morales', rel: 'Child', plan: 'Gold HMO' },
-                    { hcid: 'HCID-9150-4004-D', label: 'Rosa Morales', rel: 'Parent', plan: 'Gold HMO' },
-                    // Chen Family (EPO)
-                    { hcid: 'HCID-6208-5001-A', label: 'David Chen', rel: 'Primary', plan: 'Premier EPO' },
-                    { hcid: 'HCID-6208-5002-B', label: 'Mei-Ling Chen', rel: 'Spouse', plan: 'Premier EPO' },
-                    { hcid: 'HCID-6208-5003-C', label: 'Daniel Chen', rel: 'Child', plan: 'Premier EPO' },
-                    { hcid: 'HCID-6208-5004-D', label: 'Wei-Hsin Chen', rel: 'Parent', plan: 'Premier EPO' },
-                  ].map((sample) => (
-                    <button
-                      key={sample.hcid}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(sample.hcid);
-                        executeServiceSearch(sample.hcid);
-                      }}
-                      className={`px-2.5 py-1 rounded-md border font-mono text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        searchQuery === sample.hcid
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs ring-1 ring-blue-400'
-                          : 'bg-white hover:bg-blue-50 text-blue-800 border-blue-200 shadow-2xs hover:border-blue-400'
-                      }`}
-                    >
-                      <span>{sample.hcid}</span>
-                      <span className={`text-[10px] font-sans px-1 rounded ${searchQuery === sample.hcid ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600'}`}>
-                        {sample.label} ({sample.rel})
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Master Eligibility Directory Table Toggle */}
               <div className="pt-1 border-t border-blue-100 flex items-center justify-between">
                 <button
