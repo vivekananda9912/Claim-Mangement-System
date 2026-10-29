@@ -77,6 +77,10 @@ export default function App() {
             setActiveTaskId(null);
             setSelectedCaseId(cid);
           }}
+          onCloseAll={() => {
+            setActiveTaskId(null);
+            setSelectedCaseId(null);
+          }}
         />
       </div>
     );
@@ -101,6 +105,10 @@ export default function App() {
           }}
           onOpenCase={(cid) => {
             setSelectedCaseId(cid);
+          }}
+          onCloseAll={() => {
+            setSelectedCaseId(null);
+            setActiveTaskId(null);
           }}
         />
       </div>
@@ -173,17 +181,21 @@ export default function App() {
           setActiveTaskId(null);
           setSelectedCaseId(cid);
         }}
+        onCloseAll={() => {
+          setActiveTaskId(null);
+          setSelectedCaseId(null);
+        }}
       />
 
       {/* Clean Enterprise Footer */}
       <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 mt-auto">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-700">OmniClaim Health</span>
+          <span className="font-semibold text-slate-700">Claim Management</span>
           <span>·</span>
-          <span>Dual-Role Deterministic Claims Engine</span>
+          <span>Operations & Clinical Adjudication</span>
         </div>
         <div className="text-[11px] text-slate-400">
-          Workbasket Adjudication · 6-Stage Deterministic Rules
+          Role-Governed Workflow
         </div>
       </footer>
     </div>

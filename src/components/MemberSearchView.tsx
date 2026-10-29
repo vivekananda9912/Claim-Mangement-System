@@ -36,7 +36,8 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
   onStartIntake,
   onSelectCase,
 }) => {
-  const { customers, policies, cases } = useClaimsStore();
+  const { customers, policies, cases, currentRole } = useClaimsStore();
+  const isDoctor = currentRole === 'DOCTOR_APPROVER';
 
   const [query, setQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -271,7 +272,7 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
               </div>
             </div>
 
-            {onStartIntake && (
+            {!isDoctor && onStartIntake && (
               <button
                 onClick={() => onStartIntake(matchedCustomer, selectedMember || matchedCustomer.primarySubscriber)}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto"

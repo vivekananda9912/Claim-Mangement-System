@@ -26,6 +26,7 @@ import {
   Check,
   XCircle,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import { OpenReviewModal } from './OpenReviewModal';
 import { CloseoutModal } from './CloseoutModal';
@@ -485,7 +486,27 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
                     />
                   </div>
 
-                  {isDoctorRole ? (
+                  {task.status === 'COMPLETED' ? (
+                    <div className="space-y-3 pt-2">
+                      <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-xs text-emerald-800">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                        <div>
+                          <div className="font-bold">Clinical Adjudication Finalized</div>
+                          <div className="text-[11px] text-emerald-700 mt-0.5">
+                            Case advanced to Stage 05 (Settlement). No further physician action is required on this case.
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onBack}
+                        className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Close Task</span>
+                      </button>
+                    </div>
+                  ) : isDoctorRole ? (
                     <button
                       type="submit"
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
