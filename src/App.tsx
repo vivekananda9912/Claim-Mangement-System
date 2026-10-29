@@ -23,7 +23,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('cases');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-  const [showIntakeModal, setShowIntakeModal] = useState<boolean>(false);
 
   const { currentRole, setRole, cases } = useClaimsStore();
 
@@ -62,8 +61,13 @@ export default function App() {
     setActiveTab(tab);
   };
 
+  const handleOpenIntake = () => {
+    setSelectedCaseId(null);
+    setActiveTaskId(null);
+    setActiveTab('intake');
+  };
+
   const handleCaseCreated = (caseId: string) => {
-    setShowIntakeModal(false);
     setSelectedCaseId(caseId);
     setActiveTab('cases');
   };
@@ -82,7 +86,7 @@ export default function App() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        onOpenNewCase={() => setShowIntakeModal(true)}
+        onOpenNewCase={handleOpenIntake}
         onLogout={handleLogout}
         onGoHome={handleGoHome}
       />
@@ -107,18 +111,27 @@ export default function App() {
             ].map((st, idx) => {
               const isPast = activeViewingCase.currentStage > st.num;
               const isCurrent = activeViewingCase.currentStage === st.num;
+              const isCaseClosed =
+                activeViewingCase.currentStage === 6 ||
+                activeViewingCase.status === 'RESOLVED' ||
+                activeViewingCase.status === 'CLOSED';
+              const isStep6Closed = st.num === 6 && isCaseClosed;
+
+              let stageColor = 'text-slate-400 bg-slate-800/30';
+              if (isStep6Closed) {
+                stageColor = 'bg-emerald-600 text-white shadow-xs';
+              } else if (isCurrent) {
+                stageColor = 'bg-blue-600 text-white shadow-xs';
+              } else if (isPast) {
+                stageColor = 'text-emerald-400 bg-slate-800/80';
+              }
+
               return (
                 <React.Fragment key={st.num}>
                   <div
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                      isCurrent
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : isPast
-                        ? 'text-emerald-400 bg-slate-800/80'
-                        : 'text-slate-400 bg-slate-800/30'
-                    }`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${stageColor}`}
                   >
-                    <span>{isPast ? '✓' : st.num}</span>
+                    <span>{isPast || isStep6Closed ? '✓' : st.num}</span>
                     <span>{st.label}</span>
                   </div>
                   {idx < 5 && <span className="text-slate-700 text-[10px]">→</span>}
@@ -158,7 +171,7 @@ export default function App() {
           {(activeTab === 'cases' || activeTab === 'global_search') && (
             <CasesCockpit
               onSelectCase={(id) => setSelectedCaseId(id)}
-              onOpenNewCase={() => setShowIntakeModal(true)}
+              onOpenNewCase={handleOpenIntake}
               onOpenTask={(tid) => setActiveTaskId(tid)}
             />
           )}
@@ -166,7 +179,7 @@ export default function App() {
           {/* Tab 2: Member & Household Directory Search */}
           {activeTab === 'member_search' && (
             <MemberSearchView
-              onStartIntake={() => setShowIntakeModal(true)}
+              onStartIntake={handleOpenIntake}
               onSelectCase={(id) => setSelectedCaseId(id)}
             />
           )}
@@ -179,7 +192,7 @@ export default function App() {
             />
           )}
 
-          {/* Tab 4: Direct Intake Wizard (if triggered via tab) */}
+          {/* Tab 4: Direct Intake Wizard (always renders under persistent Navbar) */}
           {activeTab === 'intake' && (
             <PolicyIntakeWizard
               onCaseCreated={handleCaseCreated}
@@ -187,16 +200,6 @@ export default function App() {
             />
           )}
         </main>
-      )}
-
-      {/* Standalone Full Screen Intake Wizard Modal */}
-      {showIntakeModal && (
-        <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col h-screen overflow-y-auto animate-in fade-in duration-200">
-          <PolicyIntakeWizard
-            onCaseCreated={handleCaseCreated}
-            onCancel={() => setShowIntakeModal(false)}
-          />
-        </div>
       )}
 
       {/* Global Active Milestone Feedback Modal */}

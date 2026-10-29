@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   RotateCcw,
   Home,
+  PlusCircle,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -38,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const isDoctor = currentRole === 'DOCTOR_APPROVER';
 
-  // Navigation Items: 1st Global Search, 2nd Member Search, (and Clinical Desk if Doctor)
+  // Navigation Items: 1st Global Search, 2nd Member Search, 3rd Intake Service (Analyst), and Clinical Desk if Doctor
   const navItems = [
     {
       id: 'cases',
@@ -52,6 +53,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       icon: Users,
       description: 'HCID & Household Lookup',
     },
+    ...(!isDoctor
+      ? [
+          {
+            id: 'intake',
+            label: 'Intake Service',
+            icon: PlusCircle,
+            description: 'Capture & Eligibility Intake',
+          },
+        ]
+      : []),
     ...(isDoctor
       ? [
           {
@@ -145,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer hover:shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Intake Case</span>
+              <span>Intake Service</span>
             </button>
           )}
 

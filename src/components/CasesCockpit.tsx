@@ -168,7 +168,7 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
       case 5:
         return { label: '05. Closeout & Settlement', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
       case 6:
-        return { label: '06. Resolved', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+        return { label: '06. Resolved', color: 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' };
       default:
         return { label: `Stage ${stage}`, color: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
@@ -457,6 +457,12 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
                 ) : (
                   filteredDoctorTasks.map((t) => {
                     const linkedCase = cases.find((c) => c._id === t.caseId);
+                    const isResolvedTask =
+                      t.status === 'COMPLETED' ||
+                      t.status === 'RESOLVED' ||
+                      linkedCase?.status === 'RESOLVED' ||
+                      linkedCase?.status === 'CLOSED' ||
+                      linkedCase?.currentStage === 6;
                     return (
                       <tr
                         key={t._id}
@@ -536,23 +542,19 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
 
                         {/* Action */}
                         <td className="py-3 px-4 text-right">
-                          {onOpenTask && (
+                          {!isResolvedTask && onOpenTask ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onOpenTask(t._id);
                               }}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer ml-auto ${
-                                t.status === 'COMPLETED'
-                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
-                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-                              }`}
+                              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer ml-auto"
                             >
                               <Stethoscope className="w-3.5 h-3.5" />
-                              <span>{t.status === 'COMPLETED' ? 'View Task' : 'Adjudicate'}</span>
+                              <span>Adjudicate</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
-                          )}
+                          ) : null}
                         </td>
                       </tr>
                     );
@@ -624,6 +626,10 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
                 ) : (
                   filteredCases.map((c) => {
                     const stageBadge = getStageBadge(c.currentStage);
+                    const isCaseResolved =
+                      c.status === 'RESOLVED' ||
+                      c.status === 'CLOSED' ||
+                      c.currentStage === 6;
                     return (
                       <tr
                         key={c._id}
@@ -709,16 +715,18 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
 
                         {/* Pick / Work Action */}
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectCase(c._id);
-                            }}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer ml-auto"
-                          >
-                            <span>Pick Case</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
+                          {!isCaseResolved ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectCase(c._id);
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer ml-auto"
+                            >
+                              <span>Pick Case</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          ) : null}
                         </td>
                       </tr>
                     );

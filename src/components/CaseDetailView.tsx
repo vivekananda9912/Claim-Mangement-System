@@ -212,6 +212,26 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
             const isCompleted = activeCase.currentStage > st.num;
             const isCurrent = activeCase.currentStage === st.num;
             const isClickable = st.num === 2 || st.num === 5;
+            const isCaseClosed =
+              activeCase.currentStage === 6 ||
+              activeCase.status === 'RESOLVED' ||
+              activeCase.status === 'CLOSED';
+            const isResolvedStep6 = st.num === 6 && isCaseClosed;
+
+            let circleColor = 'bg-slate-200 text-slate-500';
+            let labelColor = 'text-slate-400';
+
+            if (isResolvedStep6) {
+              circleColor = 'bg-emerald-600 text-white ring-4 ring-emerald-100';
+              labelColor = 'text-emerald-700 font-bold';
+            } else if (isCompleted) {
+              circleColor = 'bg-emerald-600 text-white';
+              labelColor = 'text-slate-800';
+            } else if (isCurrent) {
+              circleColor = 'bg-blue-600 text-white ring-4 ring-blue-100';
+              labelColor = 'text-blue-900 font-bold';
+            }
+
             return (
               <React.Fragment key={st.num}>
                 <div
@@ -225,32 +245,20 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
                   title={st.num === 2 ? 'Click to open Stage 02 Review' : st.num === 5 ? 'Click to open Closeout & Settlement' : undefined}
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      isCompleted
-                        ? 'bg-emerald-600 text-white'
-                        : isCurrent
-                        ? 'bg-blue-600 text-white ring-4 ring-blue-100'
-                        : 'bg-slate-200 text-slate-500'
-                    }`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${circleColor}`}
                   >
-                    {isCompleted ? <Check className="w-3.5 h-3.5" /> : st.num}
+                    {isResolvedStep6 || isCompleted ? <Check className="w-3.5 h-3.5" /> : st.num}
                   </div>
-                  <span
-                    className={`font-semibold ${
-                      isCurrent
-                        ? 'text-blue-900 font-bold'
-                        : isCompleted
-                        ? 'text-slate-800'
-                        : 'text-slate-400'
-                    }`}
-                  >
+                  <span className={`font-semibold ${labelColor}`}>
                     {st.label}
                   </span>
                 </div>
                 {idx < stagesList.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 mx-3 min-w-4 ${
-                      activeCase.currentStage > st.num ? 'bg-emerald-500' : 'bg-slate-200'
+                      activeCase.currentStage > st.num || (st.num === 5 && isCaseClosed)
+                        ? 'bg-emerald-500'
+                        : 'bg-slate-200'
                     }`}
                   />
                 )}
