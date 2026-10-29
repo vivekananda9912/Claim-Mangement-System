@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { apiRouter } from './src/routes';
+import { eligibilityRoutes } from './src/modules/eligibility/eligibility.routes';
 import { connectDatabase } from './src/db/connection';
 import { seedDatabase } from './src/db/seed';
 
@@ -18,6 +20,9 @@ async function startServer() {
   // Connect Database & Seed initial master records
   await connectDatabase();
   await seedDatabase();
+
+  // Mount National Healthcare ID (HCID) Eligibility Service Lookup
+  app.use('/v2/eligibility', eligibilityRoutes);
 
   // Mount OmniClaim REST API routes
   app.use('/api', apiRouter);

@@ -26,14 +26,20 @@ import {
   AlertTriangle,
   Building2,
   FileCheck,
+  ArrowLeft,
+  Lock,
+  Copy,
 } from 'lucide-react';
+import { OpenReviewModal } from './OpenReviewModal';
+import { CloseoutModal } from './CloseoutModal';
 
 interface CaseDetailViewProps {
   caseId: string;
   onClose: () => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose }) => {
+export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose, onOpenTask }) => {
   const {
     getCaseById,
     getClaimForCase,
@@ -44,11 +50,13 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
     policies,
     customers,
     currentRole,
+    setRole,
     uploadEvidence,
     verifyEvidence,
     updateTaskStatus,
     settleAndCloseCase,
     resolveDuplicateHold,
+    advanceToDecisionStage,
   } = useClaimsStore();
 
   const [activeTab, setActiveTab] = useState<
@@ -59,6 +67,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
   const [newDocType, setNewDocType] = useState<DcnDocumentType>('CHART_NOTES');
   const [newFileName, setNewFileName] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showOpenReviewModal, setShowOpenReviewModal] = useState(false);
+  const [showCloseoutModal, setShowCloseoutModal] = useState(false);
   const [verifyNotes, setVerifyNotes] = useState('');
   const [selectedEvidenceForVerify, setSelectedEvidenceForVerify] = useState<string | null>(null);
 
@@ -95,86 +105,160 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
   };
 
   const stagesList = [
-    { num: 1, label: '01. Ingestion' },
-    { num: 2, label: '02. Eligibility' },
-    { num: 3, label: '03. Evidence DCN' },
-    { num: 4, label: '04. Clinical & SIU' },
-    { num: 5, label: '05. Settlement' },
-    { num: 6, label: '06. Archived' },
+    { num: 1, label: '01. Capture Request' },
+    { num: 2, label: '02. Initial Review' },
+    { num: 3, label: '03. Claim & Auth Evidence' },
+    { num: 4, label: '04. Decision Stage' },
+    { num: 5, label: '05. Closeout & Settlement' },
+    { num: 6, label: '06. Resolved' },
   ];
 
+  const activePendingTask = tasks.find((t) => t.status !== 'COMPLETED' && t.status !== 'RESOLVED');
+
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-6xl max-h-[92vh] rounded-xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden">
-        {/* Modal Top Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-base font-bold text-slate-900">
-                {activeCase.caseNumber}
+    <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
+      {/* Case Header Action Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Cases Cockpit</span>
+          </button>
+
+          <span className="text-slate-300">|</span>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="font-mono text-base font-bold text-slate-900">
+              {activeCase.caseNumber}
+            </span>
+            <span className="text-slate-400">·</span>
+            <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+              Claim {activeCase.claimId}
+            </span>
+            <span
+              className={`text-xs px-2.5 py-0.5 rounded font-semibold border ${
+                activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED' || activeCase.status === 'RESOLVED'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : activeCase.status === 'IN_REVIEW' || activeCase.status === 'FRAUD_HOLD'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              }`}
+            >
+              {activeCase.status.replace('_', ' ')}
+            </span>
+
+            {activeCase.tags.includes('Duplicate Checked & Resolved') && (
+              <span className="text-xs px-2.5 py-0.5 rounded font-bold border bg-purple-50 text-purple-800 border-purple-200 flex items-center gap-1 shadow-2xs">
+                <Copy className="w-3.5 h-3.5 text-purple-700" />
+                <span>Duplicate Checked · Resolved</span>
               </span>
-              <span className="text-slate-400">·</span>
-              <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                Claim {activeCase.claimId}
-              </span>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded font-semibold border ${
-                  activeCase.status === 'APPROVED' || activeCase.status === 'SETTLED'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : activeCase.status === 'IN_REVIEW' || activeCase.status === 'FRAUD_HOLD'
-                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
-              >
-                {activeCase.status.replace('_', ' ')}
-              </span>
-            </div>
-            <h2 className="text-sm font-semibold text-slate-800 mt-1">{activeCase.title}</h2>
+            )}
           </div>
+        </div>
+
+        {/* Header Right Action Group */}
+        <div className="flex items-center gap-2">
+          {/* Direct Open Review Screen CTA */}
+          <button
+            id="case-detail-open-review-btn"
+            onClick={() => setShowOpenReviewModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+            title="Open Full-Screen Review & Duplicate Engine"
+          >
+            <FileText className="w-3.5 h-3.5 text-blue-600" />
+            <span>Open Review Screen</span>
+          </button>
+
+          {activeCase.currentStage === 4 && activePendingTask && onOpenTask && (
+            currentRole === 'DOCTOR_APPROVER' ? (
+              <button
+                onClick={() => onOpenTask(activePendingTask._id)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Doctor Decision Task ({activePendingTask.taskId})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => onOpenTask(activePendingTask._id)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                title="View doctor task in read-only mode"
+              >
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <span>View Doctor Task ({activePendingTask.taskId})</span>
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )
+          )}
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            title="Return to Dashboard"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
+      </div>
 
-        {/* 6-Stage Progress Stepper Bar */}
-        <div className="px-6 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between text-xs overflow-x-auto">
+      {/* 6-Stage Progress Stepper Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3 shadow-2xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs overflow-x-auto">
           {stagesList.map((st, idx) => {
             const isCompleted = activeCase.currentStage > st.num;
             const isCurrent = activeCase.currentStage === st.num;
+            const isClickable = st.num === 2 || st.num === 5;
+            const isCaseClosed =
+              activeCase.currentStage === 6 ||
+              activeCase.status === 'RESOLVED' ||
+              activeCase.status === 'CLOSED';
+            const isResolvedStep6 = st.num === 6 && isCaseClosed;
+
+            let circleColor = 'bg-slate-200 text-slate-500';
+            let labelColor = 'text-slate-400';
+
+            if (isResolvedStep6) {
+              circleColor = 'bg-emerald-600 text-white ring-4 ring-emerald-100';
+              labelColor = 'text-emerald-700 font-bold';
+            } else if (isCompleted) {
+              circleColor = 'bg-emerald-600 text-white';
+              labelColor = 'text-slate-800';
+            } else if (isCurrent) {
+              circleColor = 'bg-blue-600 text-white ring-4 ring-blue-100';
+              labelColor = 'text-blue-900 font-bold';
+            }
+
             return (
               <React.Fragment key={st.num}>
-                <div className="flex items-center gap-1.5 shrink-0 py-1">
+                <div
+                  onClick={() => {
+                    if (st.num === 2) setShowOpenReviewModal(true);
+                    if (st.num === 5) setShowCloseoutModal(true);
+                  }}
+                  className={`flex items-center gap-2 shrink-0 py-1 ${
+                    isClickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  }`}
+                  title={st.num === 2 ? 'Click to open Stage 02 Review' : st.num === 5 ? 'Click to open Closeout & Settlement' : undefined}
+                >
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      isCompleted
-                        ? 'bg-emerald-600 text-white'
-                        : isCurrent
-                        ? 'bg-blue-600 text-white ring-2 ring-blue-200'
-                        : 'bg-slate-200 text-slate-500'
-                    }`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${circleColor}`}
                   >
-                    {isCompleted ? <Check className="w-3 h-3" /> : st.num}
+                    {isResolvedStep6 || isCompleted ? <Check className="w-3.5 h-3.5" /> : st.num}
                   </div>
-                  <span
-                    className={`font-medium ${
-                      isCurrent
-                        ? 'text-blue-900 font-semibold'
-                        : isCompleted
-                        ? 'text-slate-800'
-                        : 'text-slate-400'
-                    }`}
-                  >
+                  <span className={`font-semibold ${labelColor}`}>
                     {st.label}
                   </span>
                 </div>
                 {idx < stagesList.length - 1 && (
                   <div
-                    className={`flex-1 h-0.5 mx-2 min-w-4 ${
-                      activeCase.currentStage > st.num ? 'bg-emerald-500' : 'bg-slate-200'
+                    className={`flex-1 h-0.5 mx-3 min-w-4 ${
+                      activeCase.currentStage > st.num || (st.num === 5 && isCaseClosed)
+                        ? 'bg-emerald-500'
+                        : 'bg-slate-200'
                     }`}
                   />
                 )}
@@ -182,17 +266,169 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
             );
           })}
         </div>
+      </div>
+
+      {/* Contextual Stage Action Callout Banner */}
+      <div className="max-w-7xl w-full mx-auto px-6 pt-5">
+        {activeCase.currentStage === 2 && (
+          <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <FileCheck className="w-5 h-5 text-blue-600 shrink-0" />
+              <div>
+                <span className="font-bold text-blue-900 block">
+                  Stage 02 Initial Review: Confirm Request, Modify Member & Edit Claim Services
+                </span>
+                <span className="text-blue-800 text-[11px]">
+                  Confirm member HCID, household dependents, coverage financials, and add/remove service line items before proceeding.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowOpenReviewModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Open-Review Screen</span>
+            </button>
+          </div>
+        )}
+
+        {activeCase.currentStage === 3 && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <span className="font-bold text-amber-900 block">
+                  Stage 03 Claim & Auth Evidence: Supporting Legal DCN Documents
+                </span>
+                <span className="text-amber-800 text-[11px]">
+                  {activeCase.missingDocumentTypes.length > 0
+                    ? `Missing ${activeCase.missingDocumentTypes.join(', ')}. Upload DCN evidence or advance to create Doctor Decision task.`
+                    : 'Claim items and authorizations logged. Ready to dispatch task to Doctor for Stage 04 Decision.'}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setActiveTab('evidences')}
+                className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-bold rounded-lg text-xs cursor-pointer shadow-2xs transition-colors"
+              >
+                Evidence Vault
+              </button>
+              <button
+                onClick={() => {
+                  advanceToDecisionStage(activeCase._id);
+                  setActiveTab('overview');
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                <span>Advance to Stage 04 (Doctor Decision)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeCase.currentStage === 4 && (
+          <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <Stethoscope className="w-5 h-5 text-purple-600 shrink-0" />
+              <div>
+                <span className="font-bold text-purple-900 block">
+                  Stage 04 Decision Stage: Doctor Review Task Assigned (Dr. Sarah Chen, MD)
+                </span>
+                <span className="text-purple-800 text-[11px]">
+                  Only Doctor can make the decision. Case cannot proceed forward until the doctor review task is adjudicated.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {currentRole === 'DOCTOR_APPROVER' ? (
+                <button
+                  onClick={() => {
+                    const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                    if (docTask && onOpenTask) {
+                      onOpenTask(docTask._id);
+                    }
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  <span>Adjudicate Decision Task</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-semibold text-xs">
+                    <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>Assigned to Dr. Sarah Chen, MD (Read-Only for Analyst)</span>
+                  </div>
+                  {onOpenTask && (
+                    <button
+                      onClick={() => {
+                        const docTask = tasks.find((tsk) => tsk.taskType === 'DOCTOR_CLINICAL_REVIEW');
+                        if (docTask) onOpenTask(docTask._id);
+                      }}
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs cursor-pointer shadow-2xs transition-colors flex items-center gap-1"
+                    >
+                      <span>View Task</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeCase.currentStage === 5 && (
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <CreditCard className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <span className="font-bold text-emerald-900 block">
+                  Stage 05 Closeout Screen: Ready to Authorize Settlement & Close Case
+                </span>
+                <span className="text-emerald-800 text-[11px]">
+                  Clinical decision finalized. Authorized Net Insurer Disbursement: ${activeCase.financials.netPayout.toFixed(2)}.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowCloseoutModal(true)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shrink-0 cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Launch Closeout Screen</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {activeCase.currentStage === 6 && (
+          <div className="p-3.5 rounded-lg bg-slate-200/70 border border-slate-300 text-xs flex items-center gap-2 text-slate-700 font-medium">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Stage 06 Case Resolved: Adjudication finalized, settlement disbursed, and case records sealed.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Case Content Wrapper */}
+      <div className="max-w-7xl w-full mx-auto p-6 md:p-8 flex-1 flex flex-col">
+        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden flex-1 flex flex-col">
 
         {/* Navigation Tabs */}
         <div className="px-6 pt-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview & Policy', icon: Building2 },
             { id: 'claim_lines', label: `Claim Lines (${claim?.items.length || 0})`, icon: Stethoscope },
-            { id: 'evidences', label: `Evidence Vault (${evidences.length})`, icon: FileText },
+            { id: 'evidences', label: `Claim & Auth Evidence (${evidences.length})`, icon: FileText },
             { id: 'tasks', label: `Workbasket Tasks (${tasks.length})`, icon: Clock },
             { id: 'fraud', label: 'Duplicate & Fraud Risk', icon: ShieldAlert },
             { id: 'events', label: `Event Stream (${events.length})`, icon: History },
-            { id: 'settlement', label: 'Settlement & Voucher', icon: CreditCard },
+            { id: 'settlement', label: 'Closeout & Settlement', icon: CreditCard },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -247,8 +483,9 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                     <div className="text-sm font-bold text-slate-900">
                       {activeCase.patientName}
                     </div>
-                    <div className="text-slate-600 mt-0.5">
-                      Patient Member ID: <span className="font-mono font-semibold">{activeCase.patientMemberId}</span>
+                    <div className="text-slate-600 mt-0.5 space-y-0.5 font-mono text-[11px]">
+                      <div>Patient Member ID: <span className="font-semibold">{activeCase.patientMemberId}</span></div>
+                      <div className="text-blue-700 font-bold">Unique HCID: {activeCase.patientHcid || 'HCID-8492-1003-C'}</div>
                     </div>
                   </div>
 
@@ -565,14 +802,25 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                 Discrete operational tasks spawned under this Case aggregate. Completing milestone tasks updates the case stage.
               </div>
 
-              <div className="space-y-3">
-                {tasks.map((task) => (
+              {tasks.length === 0 ? (
+                <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 shadow-2xs">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div className="font-bold text-slate-700 text-sm">No Task Assigned for Stage 0{activeCase.currentStage}</div>
+                  <p className="mt-1 max-w-md mx-auto text-slate-400">
+                    Operational stages (Capture, Initial Review, Evidence, Settlement) progress through the standard screen flow. Discrete tasks are assigned strictly for Stage 04 (Doctor Decision).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => (
                   <div
                     key={task._id}
                     className="p-4 bg-white border border-slate-200 rounded-lg shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-bold text-slate-800">{task.taskId}</span>
                         <span className="text-slate-300">·</span>
                         <span className="text-xs font-semibold text-slate-900">{task.title}</span>
@@ -587,6 +835,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                         >
                           {task.priority}
                         </span>
+                        {task.taskType === 'DOCTOR_CLINICAL_REVIEW' && currentRole !== 'DOCTOR_APPROVER' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                            <Lock className="w-2.5 h-2.5 text-amber-700" /> Doctor Only (Analyst Read-Only)
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-slate-500 mt-1 flex items-center gap-3">
                         <span>Workbasket: <strong className="text-slate-700">{task.workbasket}</strong></span>
@@ -602,30 +855,66 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <select
-                        value={task.status}
-                        onChange={(e) => updateTaskStatus(task._id, e.target.value as any)}
-                        className={`text-xs font-semibold px-2.5 py-1 rounded border cursor-pointer ${
-                          task.status === 'COMPLETED' || task.status === 'RESOLVED'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : task.status === 'IN_PROGRESS'
-                            ? 'bg-blue-50 text-blue-800 border-blue-300'
-                            : 'bg-slate-50 text-slate-700 border-slate-300'
-                        }`}
-                      >
-                        <option value="OPEN">OPEN</option>
-                        <option value="IN_PROGRESS">IN_PROGRESS</option>
-                        <option value="PENDING">PENDING</option>
-                        <option value="RESOLVED">RESOLVED</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                        <option value="ESCALATED">ESCALATED</option>
-                      </select>
+                      {task.taskType === 'DOCTOR_CLINICAL_REVIEW' && currentRole !== 'DOCTOR_APPROVER' ? (
+                        <>
+                          {onOpenTask && (
+                            <button
+                              onClick={() => onOpenTask(task._id)}
+                              className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                              title="Inspect Doctor Task in Read-Only Mode"
+                            >
+                              <Lock className="w-3 h-3 text-amber-600" />
+                              <span>View Task (Read-Only)</span>
+                              <ArrowRight className="w-3 h-3 text-slate-400" />
+                            </button>
+                          )}
+                          <div
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-semibold text-slate-500 cursor-not-allowed"
+                            title="Only licensed physician can update Doctor Review status"
+                          >
+                            <Lock className="w-3 h-3 text-amber-600" />
+                            <span>{task.status} (Doctor Only)</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {onOpenTask && (
+                            <button
+                              onClick={() => onOpenTask(task._id)}
+                              className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            >
+                              <span>Work on Task in Full Page</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          )}
+
+                          <select
+                            value={task.status}
+                            onChange={(e) => updateTaskStatus(task._id, e.target.value as any)}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded border cursor-pointer ${
+                              task.status === 'COMPLETED' || task.status === 'RESOLVED'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : task.status === 'IN_PROGRESS'
+                                ? 'bg-blue-50 text-blue-800 border-blue-300'
+                                : 'bg-slate-50 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            <option value="OPEN">OPEN</option>
+                            <option value="IN_PROGRESS">IN_PROGRESS</option>
+                            <option value="PENDING">PENDING</option>
+                            <option value="RESOLVED">RESOLVED</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="ESCALATED">ESCALATED</option>
+                          </select>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
           {/* TAB 5: FRAUD & DUPLICATE RISK */}
           {activeTab === 'fraud' && (
@@ -844,18 +1133,11 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
 
                 {activeCase.currentStage < 6 && (
                   <button
-                    onClick={() =>
-                      settleAndCloseCase({
-                        caseId: activeCase._id,
-                        authorizedAmount: activeCase.financials.netPayout,
-                        paymentMethod: 'ELECTRONIC_FUNDS_TRANSFER',
-                        voucherNotes: 'Authorized in accordance with Gold PPO fee schedule.',
-                      })
-                    }
-                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+                    onClick={() => setShowCloseoutModal(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
-                    <span>Authorize Voucher & Close Case (Stage 6)</span>
+                    <span>Launch Stage 05 Closeout Screen</span>
                   </button>
                 )}
               </div>
@@ -863,6 +1145,27 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose 
           )}
         </div>
       </div>
+      </div>
+
+      {/* Open Review Modal for Stage 02 Initial Review */}
+      {showOpenReviewModal && (
+        <OpenReviewModal
+          caseId={activeCase._id}
+          onClose={() => setShowOpenReviewModal(false)}
+          onConfirmed={() => {
+            setShowOpenReviewModal(false);
+            setActiveTab('evidences');
+          }}
+        />
+      )}
+
+      {/* Closeout Modal for Stage 05 Closeout & Settlement */}
+      {showCloseoutModal && (
+        <CloseoutModal
+          caseId={activeCase._id}
+          onClose={() => setShowCloseoutModal(false)}
+        />
+      )}
     </div>
   );
 };

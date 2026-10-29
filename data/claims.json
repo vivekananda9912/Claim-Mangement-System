@@ -1,0 +1,1887 @@
+[
+  {
+    "_id": "claim-1001",
+    "claimId": "CLM-2026-1001",
+    "caseId": "case-1001",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1001-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 40,
+        "coinsurance": 48,
+        "eligiblePayout": 192,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1001"
+  },
+  {
+    "_id": "claim-1002",
+    "claimId": "CLM-2026-1002",
+    "caseId": "case-1002",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1002-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 50,
+        "coinsurance": 74,
+        "eligiblePayout": 296,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1002"
+  },
+  {
+    "_id": "claim-1003",
+    "claimId": "CLM-2026-1003",
+    "caseId": "case-1003",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1003-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 20,
+        "coinsurance": 356,
+        "eligiblePayout": 1424,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1003"
+  },
+  {
+    "_id": "claim-1004",
+    "claimId": "CLM-2026-1004",
+    "caseId": "case-1004",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1004-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 30,
+        "coinsurance": 264,
+        "eligiblePayout": 1056,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1004"
+  },
+  {
+    "_id": "claim-1005",
+    "claimId": "CLM-2026-1005",
+    "caseId": "case-1005",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1005-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 40,
+        "coinsurance": 712,
+        "eligiblePayout": 2848,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1005"
+  },
+  {
+    "_id": "claim-1006",
+    "claimId": "CLM-2026-1006",
+    "caseId": "case-1006",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1006-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-01-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 50,
+        "coinsurance": 28,
+        "eligiblePayout": 112,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1006"
+  },
+  {
+    "_id": "claim-1007",
+    "claimId": "CLM-2026-1007",
+    "caseId": "case-1007",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1007-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 20,
+        "coinsurance": 246,
+        "eligiblePayout": 984,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1007"
+  },
+  {
+    "_id": "claim-1008",
+    "claimId": "CLM-2026-1008",
+    "caseId": "case-1008",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1008-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-03-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 30,
+        "coinsurance": 190,
+        "eligiblePayout": 760,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1008"
+  },
+  {
+    "_id": "claim-1009",
+    "claimId": "CLM-2026-1009",
+    "caseId": "case-1009",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1009-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-01-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 40,
+        "coinsurance": 96,
+        "eligiblePayout": 384,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1009"
+  },
+  {
+    "_id": "claim-1010",
+    "claimId": "CLM-2026-1010",
+    "caseId": "case-1010",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1010-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 50,
+        "coinsurance": 22,
+        "eligiblePayout": 88,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1010"
+  },
+  {
+    "_id": "claim-1011",
+    "claimId": "CLM-2026-1011",
+    "caseId": "case-1011",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1011-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 20,
+        "coinsurance": 52,
+        "eligiblePayout": 208,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1011"
+  },
+  {
+    "_id": "claim-1012",
+    "claimId": "CLM-2026-1012",
+    "caseId": "case-1012",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1012-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 30,
+        "coinsurance": 78,
+        "eligiblePayout": 312,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1012"
+  },
+  {
+    "_id": "claim-1013",
+    "claimId": "CLM-2026-1013",
+    "caseId": "case-1013",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1013-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 40,
+        "coinsurance": 352,
+        "eligiblePayout": 1408,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1013"
+  },
+  {
+    "_id": "claim-1014",
+    "claimId": "CLM-2026-1014",
+    "caseId": "case-1014",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1014-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 50,
+        "coinsurance": 260,
+        "eligiblePayout": 1040,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1014"
+  },
+  {
+    "_id": "claim-1015",
+    "claimId": "CLM-2026-1015",
+    "caseId": "case-1015",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1015-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 20,
+        "coinsurance": 716,
+        "eligiblePayout": 2864,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1015"
+  },
+  {
+    "_id": "claim-1016",
+    "claimId": "CLM-2026-1016",
+    "caseId": "case-1016",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1016-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-02-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 30,
+        "coinsurance": 32,
+        "eligiblePayout": 128,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1016"
+  },
+  {
+    "_id": "claim-1017",
+    "claimId": "CLM-2026-1017",
+    "caseId": "case-1017",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1017-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 40,
+        "coinsurance": 242,
+        "eligiblePayout": 968,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1017"
+  },
+  {
+    "_id": "claim-1018",
+    "claimId": "CLM-2026-1018",
+    "caseId": "case-1018",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1018-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-01-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 50,
+        "coinsurance": 186,
+        "eligiblePayout": 744,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1018"
+  },
+  {
+    "_id": "claim-1019",
+    "claimId": "CLM-2026-1019",
+    "caseId": "case-1019",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1019-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-02-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 20,
+        "coinsurance": 100,
+        "eligiblePayout": 400,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1019"
+  },
+  {
+    "_id": "claim-1020",
+    "claimId": "CLM-2026-1020",
+    "caseId": "case-1020",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1020-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 30,
+        "coinsurance": 26,
+        "eligiblePayout": 104,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1020"
+  },
+  {
+    "_id": "claim-1021",
+    "claimId": "CLM-2026-1021",
+    "caseId": "case-1021",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1021-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 40,
+        "coinsurance": 48,
+        "eligiblePayout": 192,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1021"
+  },
+  {
+    "_id": "claim-1022",
+    "claimId": "CLM-2026-1022",
+    "caseId": "case-1022",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1022-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 50,
+        "coinsurance": 74,
+        "eligiblePayout": 296,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1022"
+  },
+  {
+    "_id": "claim-1023",
+    "claimId": "CLM-2026-1023",
+    "caseId": "case-1023",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1023-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 20,
+        "coinsurance": 356,
+        "eligiblePayout": 1424,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1023"
+  },
+  {
+    "_id": "claim-1024",
+    "claimId": "CLM-2026-1024",
+    "caseId": "case-1024",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1024-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 30,
+        "coinsurance": 264,
+        "eligiblePayout": 1056,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1024"
+  },
+  {
+    "_id": "claim-1025",
+    "claimId": "CLM-2026-1025",
+    "caseId": "case-1025",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1025-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 40,
+        "coinsurance": 712,
+        "eligiblePayout": 2848,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1025"
+  },
+  {
+    "_id": "claim-1026",
+    "claimId": "CLM-2026-1026",
+    "caseId": "case-1026",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1026-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-03-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 50,
+        "coinsurance": 28,
+        "eligiblePayout": 112,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1026"
+  },
+  {
+    "_id": "claim-1027",
+    "claimId": "CLM-2026-1027",
+    "caseId": "case-1027",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1027-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 20,
+        "coinsurance": 246,
+        "eligiblePayout": 984,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1027"
+  },
+  {
+    "_id": "claim-1028",
+    "claimId": "CLM-2026-1028",
+    "caseId": "case-1028",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1028-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-02-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 30,
+        "coinsurance": 190,
+        "eligiblePayout": 760,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1028"
+  },
+  {
+    "_id": "claim-1029",
+    "claimId": "CLM-2026-1029",
+    "caseId": "case-1029",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1029-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-03-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 40,
+        "coinsurance": 96,
+        "eligiblePayout": 384,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1029"
+  },
+  {
+    "_id": "claim-1030",
+    "claimId": "CLM-2026-1030",
+    "caseId": "case-1030",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1030-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 50,
+        "coinsurance": 22,
+        "eligiblePayout": 88,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1030"
+  },
+  {
+    "_id": "claim-1031",
+    "claimId": "CLM-2026-1031",
+    "caseId": "case-1031",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1031-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 20,
+        "coinsurance": 52,
+        "eligiblePayout": 208,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1031"
+  },
+  {
+    "_id": "claim-1032",
+    "claimId": "CLM-2026-1032",
+    "caseId": "case-1032",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1032-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 30,
+        "coinsurance": 78,
+        "eligiblePayout": 312,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1032"
+  },
+  {
+    "_id": "claim-1033",
+    "claimId": "CLM-2026-1033",
+    "caseId": "case-1033",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1033-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 40,
+        "coinsurance": 352,
+        "eligiblePayout": 1408,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1033"
+  },
+  {
+    "_id": "claim-1034",
+    "claimId": "CLM-2026-1034",
+    "caseId": "case-1034",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1034-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 50,
+        "coinsurance": 260,
+        "eligiblePayout": 1040,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1034"
+  },
+  {
+    "_id": "claim-1035",
+    "claimId": "CLM-2026-1035",
+    "caseId": "case-1035",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1035-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 20,
+        "coinsurance": 716,
+        "eligiblePayout": 2864,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1035"
+  },
+  {
+    "_id": "claim-1036",
+    "claimId": "CLM-2026-1036",
+    "caseId": "case-1036",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1036-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-01-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 30,
+        "coinsurance": 32,
+        "eligiblePayout": 128,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1036"
+  },
+  {
+    "_id": "claim-1037",
+    "claimId": "CLM-2026-1037",
+    "caseId": "case-1037",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1037-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 40,
+        "coinsurance": 242,
+        "eligiblePayout": 968,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1037"
+  },
+  {
+    "_id": "claim-1038",
+    "claimId": "CLM-2026-1038",
+    "caseId": "case-1038",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1038-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-03-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 50,
+        "coinsurance": 186,
+        "eligiblePayout": 744,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1038"
+  },
+  {
+    "_id": "claim-1039",
+    "claimId": "CLM-2026-1039",
+    "caseId": "case-1039",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1039-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-01-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 20,
+        "coinsurance": 100,
+        "eligiblePayout": 400,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1039"
+  },
+  {
+    "_id": "claim-1040",
+    "claimId": "CLM-2026-1040",
+    "caseId": "case-1040",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1040-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 30,
+        "coinsurance": 26,
+        "eligiblePayout": 104,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1040"
+  },
+  {
+    "_id": "claim-1041",
+    "claimId": "CLM-2026-1041",
+    "caseId": "case-1041",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1041-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 40,
+        "coinsurance": 48,
+        "eligiblePayout": 192,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1041"
+  },
+  {
+    "_id": "claim-1042",
+    "claimId": "CLM-2026-1042",
+    "caseId": "case-1042",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1042-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 50,
+        "coinsurance": 74,
+        "eligiblePayout": 296,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1042"
+  },
+  {
+    "_id": "claim-1043",
+    "claimId": "CLM-2026-1043",
+    "caseId": "case-1043",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1043-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 20,
+        "coinsurance": 356,
+        "eligiblePayout": 1424,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1043"
+  },
+  {
+    "_id": "claim-1044",
+    "claimId": "CLM-2026-1044",
+    "caseId": "case-1044",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1044-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 30,
+        "coinsurance": 264,
+        "eligiblePayout": 1056,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1044"
+  },
+  {
+    "_id": "claim-1045",
+    "claimId": "CLM-2026-1045",
+    "caseId": "case-1045",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1045-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 40,
+        "coinsurance": 712,
+        "eligiblePayout": 2848,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1045"
+  },
+  {
+    "_id": "claim-1046",
+    "claimId": "CLM-2026-1046",
+    "caseId": "case-1046",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1046-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-02-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 50,
+        "coinsurance": 28,
+        "eligiblePayout": 112,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1046"
+  },
+  {
+    "_id": "claim-1047",
+    "claimId": "CLM-2026-1047",
+    "caseId": "case-1047",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1047-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 20,
+        "coinsurance": 246,
+        "eligiblePayout": 984,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1047"
+  },
+  {
+    "_id": "claim-1048",
+    "claimId": "CLM-2026-1048",
+    "caseId": "case-1048",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1048-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-01-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 30,
+        "coinsurance": 190,
+        "eligiblePayout": 760,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1048"
+  },
+  {
+    "_id": "claim-1049",
+    "claimId": "CLM-2026-1049",
+    "caseId": "case-1049",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1049-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-02-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 40,
+        "coinsurance": 96,
+        "eligiblePayout": 384,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1049"
+  },
+  {
+    "_id": "claim-1050",
+    "claimId": "CLM-2026-1050",
+    "caseId": "case-1050",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1050-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 50,
+        "coinsurance": 22,
+        "eligiblePayout": 88,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1050"
+  },
+  {
+    "_id": "claim-1051",
+    "claimId": "CLM-2026-1051",
+    "caseId": "case-1051",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1051-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 20,
+        "coinsurance": 52,
+        "eligiblePayout": 208,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1051"
+  },
+  {
+    "_id": "claim-1052",
+    "claimId": "CLM-2026-1052",
+    "caseId": "case-1052",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1052-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 30,
+        "coinsurance": 78,
+        "eligiblePayout": 312,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1052"
+  },
+  {
+    "_id": "claim-1053",
+    "claimId": "CLM-2026-1053",
+    "caseId": "case-1053",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1053-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 40,
+        "coinsurance": 352,
+        "eligiblePayout": 1408,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1053"
+  },
+  {
+    "_id": "claim-1054",
+    "claimId": "CLM-2026-1054",
+    "caseId": "case-1054",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1054-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 50,
+        "coinsurance": 260,
+        "eligiblePayout": 1040,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1054"
+  },
+  {
+    "_id": "claim-1055",
+    "claimId": "CLM-2026-1055",
+    "caseId": "case-1055",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1055-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 20,
+        "coinsurance": 716,
+        "eligiblePayout": 2864,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1055"
+  },
+  {
+    "_id": "claim-1056",
+    "claimId": "CLM-2026-1056",
+    "caseId": "case-1056",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 240,
+    "items": [
+      {
+        "itemId": "ITM-1056-1",
+        "code": "CPT-90834",
+        "description": "Psychotherapy, 45 minutes with patient",
+        "category": "BEHAVIORAL_HEALTH",
+        "startDate": "2026-03-15",
+        "billedAmount": 240,
+        "allowableAmount": 190,
+        "copay": 30,
+        "coinsurance": 32,
+        "eligiblePayout": 128,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1056"
+  },
+  {
+    "_id": "claim-1057",
+    "claimId": "CLM-2026-1057",
+    "caseId": "case-1057",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 1750,
+    "items": [
+      {
+        "itemId": "ITM-1057-1",
+        "code": "CPT-73721",
+        "description": "MRI lower extremity joint without contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 1750,
+        "allowableAmount": 1250,
+        "copay": 40,
+        "coinsurance": 242,
+        "eligiblePayout": 968,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1057"
+  },
+  {
+    "_id": "claim-1058",
+    "claimId": "CLM-2026-1058",
+    "caseId": "case-1058",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1200,
+    "items": [
+      {
+        "itemId": "ITM-1058-1",
+        "code": "NDC-9021",
+        "description": "Specialty Immunotherapy maintenance dose",
+        "category": "PRESCRIPTION",
+        "startDate": "2026-02-15",
+        "billedAmount": 1200,
+        "allowableAmount": 980,
+        "copay": 50,
+        "coinsurance": 186,
+        "eligiblePayout": 744,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1058"
+  },
+  {
+    "_id": "claim-1059",
+    "claimId": "CLM-2026-1059",
+    "caseId": "case-1059",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 650,
+    "items": [
+      {
+        "itemId": "ITM-1059-1",
+        "code": "NDC-4001",
+        "description": "Maintenance prescription specialty injection",
+        "category": "PHARMACY",
+        "startDate": "2026-03-15",
+        "billedAmount": 650,
+        "allowableAmount": 520,
+        "copay": 20,
+        "coinsurance": 100,
+        "eligiblePayout": 400,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1059"
+  },
+  {
+    "_id": "claim-1060",
+    "claimId": "CLM-2026-1060",
+    "caseId": "case-1060",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 220,
+    "items": [
+      {
+        "itemId": "ITM-1060-1",
+        "code": "CPT-99213",
+        "description": "Office/outpatient visit, low complexity, 20-29 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 220,
+        "allowableAmount": 160,
+        "copay": 30,
+        "coinsurance": 26,
+        "eligiblePayout": 104,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1060"
+  },
+  {
+    "_id": "claim-1061",
+    "claimId": "CLM-2026-1061",
+    "caseId": "case-1061",
+    "provider": {
+      "npi": "1492019482",
+      "name": "Advanced Diagnostic Imaging Institute",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "450 West Roosevelt Rd, Chicago, IL"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 380,
+    "items": [
+      {
+        "itemId": "ITM-1061-1",
+        "code": "CPT-99214",
+        "description": "Office/outpatient visit, moderate complexity, 30-39 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 380,
+        "allowableAmount": 280,
+        "copay": 40,
+        "coinsurance": 48,
+        "eligiblePayout": 192,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1061"
+  },
+  {
+    "_id": "claim-1062",
+    "claimId": "CLM-2026-1062",
+    "caseId": "case-1062",
+    "provider": {
+      "npi": "1837492019",
+      "name": "Island Neuropsychology & Behavioral Health",
+      "facilityType": "PHYSICIAN_GROUP",
+      "address": "1088 Bishop St Suite 400, Honolulu, HI"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 560,
+    "items": [
+      {
+        "itemId": "ITM-1062-1",
+        "code": "CPT-99215",
+        "description": "Office/outpatient visit, high complexity, 40-54 mins",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 560,
+        "allowableAmount": 420,
+        "copay": 50,
+        "coinsurance": 74,
+        "eligiblePayout": 296,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1062"
+  },
+  {
+    "_id": "claim-1063",
+    "claimId": "CLM-2026-1063",
+    "caseId": "case-1063",
+    "provider": {
+      "npi": "1728394012",
+      "name": "Horizon Community Health & Wellness",
+      "facilityType": "INSTITUTIONAL",
+      "address": "1200 University Ave, Austin, TX"
+    },
+    "serviceDate": "2026-01-15T09:30:00Z",
+    "totalBilledAmount": 2400,
+    "items": [
+      {
+        "itemId": "ITM-1063-1",
+        "code": "CPT-70553",
+        "description": "MRI brain without & with contrast material",
+        "category": "MEDICAL",
+        "startDate": "2026-01-15",
+        "billedAmount": 2400,
+        "allowableAmount": 1800,
+        "copay": 20,
+        "coinsurance": 356,
+        "eligiblePayout": 1424,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1063"
+  },
+  {
+    "_id": "claim-1064",
+    "claimId": "CLM-2026-1064",
+    "caseId": "case-1064",
+    "provider": {
+      "npi": "1638291045",
+      "name": "Pacific Northwest Specialty Care",
+      "facilityType": "SPECIALTY_CLINIC",
+      "address": "800 5th Ave, Seattle, WA"
+    },
+    "serviceDate": "2026-02-15T09:30:00Z",
+    "totalBilledAmount": 1850,
+    "items": [
+      {
+        "itemId": "ITM-1064-1",
+        "code": "CPT-71260",
+        "description": "CT thorax diagnostic with contrast",
+        "category": "MEDICAL",
+        "startDate": "2026-02-15",
+        "billedAmount": 1850,
+        "allowableAmount": 1350,
+        "copay": 30,
+        "coinsurance": 264,
+        "eligiblePayout": 1056,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1064"
+  },
+  {
+    "_id": "claim-1065",
+    "claimId": "CLM-2026-1065",
+    "caseId": "case-1065",
+    "provider": {
+      "npi": "1982736450",
+      "name": "Metropolitan Surgical & Medical Center",
+      "facilityType": "INSTITUTIONAL",
+      "address": "742 Evergreen Terrace, Springfield, IL"
+    },
+    "serviceDate": "2026-03-15T09:30:00Z",
+    "totalBilledAmount": 4800,
+    "items": [
+      {
+        "itemId": "ITM-1065-1",
+        "code": "CPT-29881",
+        "description": "Arthroscopy, knee, surgical; with meniscectomy",
+        "category": "MEDICAL",
+        "startDate": "2026-03-15",
+        "billedAmount": 4800,
+        "allowableAmount": 3600,
+        "copay": 40,
+        "coinsurance": 712,
+        "eligiblePayout": 2848,
+        "clinicalDecision": "PENDING"
+      }
+    ],
+    "preAuthNumber": "PA-2026-1065"
+  }
+]

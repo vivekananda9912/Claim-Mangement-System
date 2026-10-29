@@ -22,7 +22,7 @@ export interface IPolicy extends Document {
   status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   effectiveDate: Date;
   expirationDate: Date;
-  networkTier: 'IN_NETWORK' | 'OUT_OF_NETWORK' | 'TIER_1_PREFERRED';
+  networkTier: 'IN_NETWORK' | 'OUT_OF_NETWORK' | 'TIER_1_PREFERRED' | 'TIER_2_STANDARD';
   familyFinancials: {
     annualDeductible: number;
     deductibleMetToDate: number;
@@ -51,7 +51,7 @@ export const PolicySchema = new Schema<IPolicy>({
   status: { type: String, enum: ['ACTIVE', 'EXPIRED', 'CANCELLED'], default: 'ACTIVE', index: true },
   effectiveDate: { type: Date, required: true, index: true },
   expirationDate: { type: Date, required: true, index: true },
-  networkTier: { type: String, enum: ['IN_NETWORK', 'OUT_OF_NETWORK', 'TIER_1_PREFERRED'], default: 'IN_NETWORK' },
+  networkTier: { type: String, enum: ['IN_NETWORK', 'OUT_OF_NETWORK', 'TIER_1_PREFERRED', 'TIER_2_STANDARD'], default: 'IN_NETWORK' },
   familyFinancials: {
     annualDeductible: { type: Number, required: true, default: 3000 },
     deductibleMetToDate: { type: Number, required: true, default: 0 },

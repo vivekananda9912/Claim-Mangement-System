@@ -5,142 +5,195 @@
 
 import React from 'react';
 import { useClaimsStore } from '../store/claimsStore';
-import { UserRole } from '../types';
 import { USER_PERSONAS } from '../data/mockData';
 import {
-  FolderKanban,
-  Inbox,
-  FilePlus2,
+  Search,
+  Users,
   Stethoscope,
-  BarChart3,
-  Database,
-  RotateCcw,
-  ShieldCheck,
+  Plus,
+  LogOut,
   UserCheck,
+  ShieldCheck,
+  RotateCcw,
+  Home,
+  PlusCircle,
 } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onOpenNewCase: () => void;
+  onLogout?: () => void;
+  onGoHome?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onOpenNewCase,
+  onLogout,
+  onGoHome,
 }) => {
-  const { currentRole, setRole, resetToSeeds } = useClaimsStore();
-  const currentPersona = USER_PERSONAS[currentRole];
+  const { currentRole, resetToSeeds } = useClaimsStore();
+  const currentPersona = USER_PERSONAS[currentRole] || USER_PERSONAS.OPERATIONS_ANALYST;
 
+  const isDoctor = currentRole === 'DOCTOR_APPROVER';
+
+  // Navigation Items: 1st Global Search, 2nd Member Search, 3rd Intake Service (Analyst), and Clinical Desk if Doctor
   const navItems = [
-    { id: 'cases', label: 'Cases Cockpit', icon: FolderKanban },
-    { id: 'workbaskets', label: 'Workbaskets', icon: Inbox },
-    { id: 'intake', label: 'Policy & Intake', icon: FilePlus2 },
-    { id: 'doctor', label: 'Clinical Desk', icon: Stethoscope },
-    { id: 'analytics', label: 'Audit & Metrics', icon: BarChart3 },
-    { id: 'mongo', label: 'MongoDB Explorer', icon: Database },
+    {
+      id: 'cases',
+      label: 'Global Search',
+      icon: Search,
+      description: 'Workbasket & Case Search',
+    },
+    {
+      id: 'member_search',
+      label: 'Member Search',
+      icon: Users,
+      description: 'HCID & Household Lookup',
+    },
+    ...(!isDoctor
+      ? [
+          {
+            id: 'intake',
+            label: 'Intake Service',
+            icon: PlusCircle,
+            description: 'Capture & Eligibility Intake',
+          },
+        ]
+      : []),
+    ...(isDoctor
+      ? [
+          {
+            id: 'doctor',
+            label: 'Clinical Desk',
+            icon: Stethoscope,
+            badge: 'Physician Queue',
+            description: 'Medical Review Tasks',
+          },
+        ]
+      : []),
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
-      {/* Top Banner: Persona Context & System Bar */}
-      <div className="bg-slate-900 text-slate-200 px-6 py-2 flex flex-wrap items-center justify-between text-xs border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-semibold text-slate-100">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>OmniClaim Enterprise</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <span className="text-slate-400">Event-Sourced Claims Adjudication</span>
-          <span className="text-slate-600">·</span>
-          <span className="text-emerald-400 font-medium">BSON Event Store Active</span>
-        </div>
-
-        {/* Persona Switcher Bar */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-slate-400">Active Persona:</span>
-            <select
-              value={currentRole}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-              className="bg-slate-800 text-white font-medium px-2.5 py-1 rounded border border-slate-700 text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
-            >
-              <option value="PROCESS_OWNER">Amanda Vance (Process Owner - Intake & Triage)</option>
-              <option value="BUSINESS_REQUESTER">David Miller (Requester - Provider Billing)</option>
-              <option value="DOCTOR_APPROVER">Dr. Sarah Chen, MD (Doctor Approver - Clinical Review)</option>
-              <option value="OPERATIONS_ANALYST">Marcus Brody (Fraud & QA Analyst - SIU)</option>
-              <option value="SYSTEM_ADMIN">Elena Rostova (System Administrator - Mongo Architect)</option>
-            </select>
-          </div>
-
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
+      <div className="px-6 py-3 flex items-center justify-between gap-4">
+        {/* Left: Home Icon & Brand Wordmark */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
-            onClick={() => {
-              if (confirm('Reset application state to initial seed cases, policies, and events?')) {
-                resetToSeeds();
-              }
-            }}
-            title="Reset to default seed state"
-            className="flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors"
+            id="nav-home-btn"
+            type="button"
+            onClick={onGoHome}
+            title="Go to Home / Cockpit"
+            className="p-2 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all cursor-pointer shadow-2xs"
           >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset Demo</span>
+            <Home className="w-4 h-4" />
           </button>
-        </div>
-      </div>
 
-      {/* Main 3-Zone Navigation Header */}
-      <div className="px-6 py-3 flex items-center justify-between gap-8">
-        {/* Zone 1: Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-            OC
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-900 tracking-tight leading-none">
-              OmniClaim Health
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">Family Health Claims & Case Engine</p>
+          <div
+            id="nav-brand-btn"
+            onClick={onGoHome}
+            className="flex items-center gap-2.5 cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              CM
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-none">
+                Claim Management
+              </h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-[10px] text-slate-500 font-medium leading-none">Claims Operations</p>
+                <span className="text-slate-300 leading-none">·</span>
+                <span
+                  title="Live data synced from MongoDB Atlas cluster: omniclaim"
+                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 leading-none"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  MongoDB Atlas Live
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Zone 2: Navigation Links */}
-        <nav className="flex items-center gap-1 overflow-x-auto">
+        {/* Center: Clean 2-3 Option Navigation Bar */}
+        <nav className="flex items-center gap-1.5 overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                id={`nav-tab-${item.id}`}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200/60 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
+                {item.badge && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
 
-        {/* Zone 3: Primary Action CTA */}
+        {/* Right: Intake Action, Logged-in Profile, and Logout */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 mr-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span className="truncate max-w-[140px] font-medium text-slate-700">{currentPersona.name}</span>
-          </div>
+          {/* Intake New Case CTA (Only for Analyst, hidden for Doctor) */}
+          {!isDoctor && (
+            <button
+              id="nav-intake-case-btn"
+              onClick={onOpenNewCase}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer hover:shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Intake Service</span>
+            </button>
+          )}
 
-          <button
-            onClick={onOpenNewCase}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors whitespace-nowrap"
-          >
-            <FilePlus2 className="w-3.5 h-3.5" />
-            <span>Intake New Claim</span>
-          </button>
+          {/* User Profile Pill */}
+          <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                isDoctor
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-blue-100 text-blue-800 border border-blue-300'
+              }`}
+            >
+              {isDoctor ? 'SC' : 'MB'}
+            </div>
+
+            <div className="hidden md:block text-left">
+              <div className="text-xs font-bold text-slate-800 leading-tight">
+                {isDoctor ? 'Dr. Sarah Chen, MD' : 'Marcus Brody'}
+              </div>
+              <div className="text-[10px] text-slate-500 font-medium leading-tight">
+                {isDoctor ? 'Doctor Approver' : 'Operations Analyst'}
+              </div>
+            </div>
+
+            {/* Log Out Button */}
+            {onLogout && (
+              <button
+                id="nav-logout-btn"
+                onClick={onLogout}
+                title="Log Out to Switch Role"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer font-medium ml-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </header>

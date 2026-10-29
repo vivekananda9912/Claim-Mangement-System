@@ -14,6 +14,7 @@ import { doctorService } from '../src/modules/doctor/doctor.service';
 import { fraudService } from '../src/modules/fraud/fraud.service';
 import { taskService } from '../src/modules/task/task.service';
 import { eventService } from '../src/modules/event/event.service';
+import { eligibilityService } from '../src/modules/eligibility/eligibility.service';
 
 async function runTestSuite() {
   console.log('================================================================');
@@ -43,7 +44,7 @@ async function runTestSuite() {
     customer?.primarySubscriber.firstName === 'Eleanor' && customer?.primarySubscriber.lastName === 'Vance',
     'Primary subscriber matches Eleanor Vance'
   );
-  assert(customer?.dependents.length === 2, 'Customer has exactly 2 dependents (Spouse & Child)');
+  assert(!!customer?.dependents && customer.dependents.length >= 2, 'Customer has covered dependents (Spouse, Children, Parent)');
 
   const memberLookup = await customerService.getByMemberId('MEM-9812-03');
   assert(
@@ -56,6 +57,24 @@ async function runTestSuite() {
   assert(policy?.familyFinancials.annualDeductible === 3000, 'Family annual deductible is $3,000');
   const medCov = policy?.categoryCoverages.find((c) => c.category === 'MEDICAL');
   assert(medCov?.copay === 40, 'Medical copay schedule is $40');
+
+  console.log('\n--- TEST BLOCK 1B: National Healthcare ID (HCID) Eligibility Service Lookup (GET /v2/eligibility/subscribers) ---');
+  // 1B.1 Direct HCID lookup
+  const hcidLookup = await eligibilityService.getSubscriberByHcid('HCID-8492-1001-A');
+  assert(!!hcidLookup, 'Eligibility service resolved Eleanor Vance by HCID-8492-1001-A');
+  assert(hcidLookup?.household.familyHcid === 'HCID-8492-HOUSEHOLD', 'Resolved master household HCID-8492-HOUSEHOLD');
+  assert(hcidLookup?.status === 'ELIGIBLE', 'Eligibility status is ELIGIBLE');
+  assert(hcidLookup?.policy?.planCode === 'PPO-PLATINUM-SHIELD', 'Policy plan code is PPO-PLATINUM-SHIELD');
+
+  // 1B.2 Query lookup with dependents (Spouse, Child, Parent)
+  const householdSearch = await eligibilityService.searchSubscribers({ query: 'Thorne' });
+  assert(householdSearch.data.length > 0, 'Found subscribers for Thorne household in database');
+  const parentMember = householdSearch.data.find((m) => m.relationship === 'PARENT');
+  assert(!!parentMember && parentMember.firstName === 'George', 'Found dependent parent George Thorne in household');
+
+  // 1B.3 Relationship filter
+  const childSearch = await eligibilityService.searchSubscribers({ relationship: 'CHILD' });
+  assert(childSearch.data.length >= 4, `Found ${childSearch.data.length} child subscribers across database records`);
 
   console.log('\n--- TEST BLOCK 2: Authentication & Role-Based Credentials ---');
   // 2.1 Requester login
@@ -295,7 +314,7 @@ async function runTestSuite() {
     doctorActor
   );
 
-  assert(settledCase.currentStage === 6, 'Case finalized and transitioned to Stage 6 Closed & Archived');
+  assert(settledCase.currentStage === 6, 'Case finalized and transitioned to Stage 6 Resolved');
   assert(settledCase.status === 'APPROVED', 'Final case status is APPROVED');
   assert(!!settledCase.settlementVoucher, 'Settlement voucher generated');
   assert(settledCase.settlementVoucher?.checkNumberOrEft === 'EFT-TRACE-99281920', 'EFT trace number recorded');

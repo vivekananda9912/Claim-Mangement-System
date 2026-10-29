@@ -19,10 +19,11 @@ import {
 
 interface DoctorReviewWorkbenchProps {
   onSelectCase: (caseId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ onSelectCase }) => {
-  const { cases, claims, doctors, evidences, doctorAdjudicateClaim } = useClaimsStore();
+export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ onSelectCase, onOpenTask }) => {
+  const { cases, claims, doctors, evidences, doctorAdjudicateClaim, currentRole, setRole } = useClaimsStore();
   const [selectedDoctorId, setSelectedDoctorId] = useState('DOC-DR-CHEN');
 
   // Find cases currently in Clinical Review (Stage 4)
@@ -32,7 +33,36 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
   // Active reviewing case
   const [reviewCaseId, setReviewCaseId] = useState<string>(clinicalCases[0]?._id || '');
   const activeCase = cases.find((c) => c._id === reviewCaseId);
-  const claim = claims.find((c) => c.caseId === reviewCaseId);
+  const claim = claims.find((c) => c.caseId === reviewCaseId || (activeCase && (c.claimId === activeCase.claimId || c._id === activeCase.claimId))) || (activeCase ? {
+    _id: `claim-${activeCase._id}`,
+    claimId: activeCase.claimId,
+    caseId: activeCase._id,
+    provider: {
+      npi: '1492019482',
+      name: 'Advanced Diagnostic Imaging Institute',
+      facilityType: 'SPECIALTY_CLINIC' as const,
+      address: '450 West Roosevelt Rd, Chicago, IL',
+    },
+    serviceDate: '2026-03-20T10:00:00Z',
+    totalBilledAmount: activeCase.financials.totalBilled || 2100.0,
+    items: [
+      {
+        itemId: 'ITM-DOC-01',
+        code: activeCase.category === 'BEHAVIORAL_HEALTH' ? 'CPT-90834' : 'CPT-70553',
+        description: activeCase.category === 'BEHAVIORAL_HEALTH'
+          ? 'Psychotherapy, 45 minutes with patient'
+          : 'Magnetic resonance imaging, brain; with and without contrast',
+        category: activeCase.category || 'MEDICAL',
+        startDate: '2026-03-20',
+        billedAmount: activeCase.financials.totalBilled || 2100.0,
+        allowableAmount: activeCase.financials.allowableAmount || 1450.0,
+        copay: 35.0,
+        coinsurance: 283.0,
+        eligiblePayout: 1132.0,
+        clinicalDecision: 'PENDING' as const,
+      },
+    ],
+  } : null);
   const caseEvidences = evidences.filter((e) => e.caseId === reviewCaseId);
 
   // Adjudication form state
@@ -66,8 +96,6 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
       itemDecisions,
       doctorNotes,
     });
-
-    alert(`Clinical review completed for ${activeCase.caseNumber}. Case advanced to Stage 5 Settlement.`);
   };
 
   return (
@@ -108,6 +136,21 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
           </select>
         </div>
       </div>
+
+      {/* Analyst Role Warning Banner if viewing as Analyst */}
+      {currentRole !== 'DOCTOR_APPROVER' && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-3 text-xs">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+          <div>
+            <span className="font-bold text-amber-900 block">
+              Read-Only Mode: Doctor Approver Role Required
+            </span>
+            <span className="text-amber-800 text-[11px]">
+              You are currently logged in as an Analyst. Analysts can view case details, but only licensed physicians can submit medical necessity sign-offs. Please log out and sign in with physician credentials (Dr. Sarah Chen, MD) to adjudicate.
+            </span>
+          </div>
+        </div>
+      )}
 
       {clinicalCases.length === 0 ? (
         <div className="bg-white p-12 border border-slate-200 rounded-xl text-center text-slate-500 shadow-2xs">
@@ -170,13 +213,25 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
                   </h4>
                 </div>
 
-                <button
-                  onClick={() => onSelectCase(activeCase._id)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
-                >
-                  <span>Open 360° Case</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {onOpenTask && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenTask(activeCase._id)}
+                      className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Stethoscope className="w-3.5 h-3.5" />
+                      <span>View Task</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onSelectCase(activeCase._id)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Open 360° Case</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Attached DCN Evidence Quick Inspect */}
@@ -337,10 +392,19 @@ export const DoctorReviewWorkbench: React.FC<DoctorReviewWorkbenchProps> = ({ on
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+                    disabled={currentRole !== 'DOCTOR_APPROVER'}
+                    className={`flex items-center gap-1.5 px-5 py-2.5 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                      currentRole === 'DOCTOR_APPROVER'
+                        ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
+                        : 'bg-slate-400 cursor-not-allowed opacity-75'
+                    }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Submit Clinical Sign-Off & Lock Reserve (Advance to Stage 5)</span>
+                    <span>
+                      {currentRole === 'DOCTOR_APPROVER'
+                        ? 'Submit Clinical Sign-Off & Lock Reserve (Advance to Stage 5)'
+                        : 'Doctor Role Required to Submit Sign-Off'}
+                    </span>
                   </button>
                 </div>
               </form>
