@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useClaimsStore } from '../store/claimsStore';
-import { Case, CareCategory } from '../types';
+import { Case, CareCategory, CaseStatus, PriorityLevel, ClaimType, WorkbasketId } from '../types';
 import {
   Search,
   ArrowRight,
@@ -26,6 +26,7 @@ import {
   Stethoscope,
   Lock,
   Copy,
+  RotateCcw,
 } from 'lucide-react';
 
 interface CasesCockpitProps {
@@ -41,10 +42,36 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
 }) => {
   const { cases, tasks, currentRole } = useClaimsStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [patientFilter, setPatientFilter] = useState('');
   const [selectedStage, setSelectedStage] = useState<number | 'ALL'>('ALL');
   const [selectedCategory, setSelectedCategory] = useState<CareCategory | 'ALL'>('ALL');
+  const [selectedPriority, setSelectedPriority] = useState<PriorityLevel | 'ALL'>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<CaseStatus | 'ALL'>('ALL');
+  const [selectedWorkbasket, setSelectedWorkbasket] = useState<WorkbasketId | 'ALL'>('ALL');
+  const [selectedClaimType, setSelectedClaimType] = useState<ClaimType | 'ALL'>('ALL');
 
   const isDoctor = currentRole === 'DOCTOR_APPROVER';
+
+  const activeFilterCount =
+    (searchQuery.trim() ? 1 : 0) +
+    (patientFilter.trim() ? 1 : 0) +
+    (selectedStage !== 'ALL' ? 1 : 0) +
+    (selectedCategory !== 'ALL' ? 1 : 0) +
+    (selectedPriority !== 'ALL' ? 1 : 0) +
+    (selectedStatus !== 'ALL' ? 1 : 0) +
+    (selectedWorkbasket !== 'ALL' ? 1 : 0) +
+    (selectedClaimType !== 'ALL' ? 1 : 0);
+
+  const resetAllFilters = () => {
+    setSearchQuery('');
+    setPatientFilter('');
+    setSelectedStage('ALL');
+    setSelectedCategory('ALL');
+    setSelectedPriority('ALL');
+    setSelectedStatus('ALL');
+    setSelectedWorkbasket('ALL');
+    setSelectedClaimType('ALL');
+  };
 
   // Filtered clinical tasks for Doctor Global Search
   const filteredDoctorTasks = useMemo(() => {
@@ -53,45 +80,80 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
       if (!isDocTask) return false;
 
       const q = searchQuery.toLowerCase().trim();
-      if (!q) return true;
-
+      const pq = patientFilter.toLowerCase().trim();
       const c = cases.find((cs) => cs._id === t.caseId);
-      return (
+
+      const matchesSearch =
+        !q ||
         t.taskId.toLowerCase().includes(q) ||
         t.caseNumber.toLowerCase().includes(q) ||
         t.title.toLowerCase().includes(q) ||
         (t.status && t.status.toLowerCase().includes(q)) ||
-        (t.priority && t.priority.toLowerCase().includes(q)) ||
-        (c && (
-          c.patientName.toLowerCase().includes(q) ||
-          c.claimId.toLowerCase().includes(q) ||
-          (c.patientHcid && c.patientHcid.toLowerCase().includes(q)) ||
-          c.familyPolicyNumber.toLowerCase().includes(q)
-        ))
-      );
-    });
-  }, [tasks, cases, searchQuery]);
+        (c && (c.claimId.toLowerCase().includes(q) || c.familyPolicyNumber.toLowerCase().includes(q)));
 
-  // Filtered cases for Analyst Workbasket
+      const matchesPatient =
+        !pq ||
+        (c && (
+          c.patientName.toLowerCase().includes(pq) ||
+          (c.patientHcid && c.patientHcid.toLowerCase().includes(pq)) ||
+          c.patientMemberId.toLowerCase().includes(pq)
+        ));
+
+      const matchesPriority = selectedPriority === 'ALL' || t.priority === selectedPriority;
+      const matchesStatus = selectedStatus === 'ALL' || t.status === selectedStatus;
+
+      return matchesSearch && matchesPatient && matchesPriority && matchesStatus;
+    });
+  }, [tasks, cases, searchQuery, patientFilter, selectedPriority, selectedStatus]);
+
+  // Comprehensive multi-field filtered cases for Analyst Workbasket Queue
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
       const q = searchQuery.toLowerCase().trim();
+      const pq = patientFilter.toLowerCase().trim();
+
       const matchesSearch =
         !q ||
         c.caseNumber.toLowerCase().includes(q) ||
         c.claimId.toLowerCase().includes(q) ||
-        c.patientName.toLowerCase().includes(q) ||
-        (c.patientHcid && c.patientHcid.toLowerCase().includes(q)) ||
-        c.familyPolicyNumber.toLowerCase().includes(q) ||
         c.title.toLowerCase().includes(q) ||
-        c.assignedWorkbasket.toLowerCase().includes(q);
+        c.familyPolicyNumber.toLowerCase().includes(q);
+
+      const matchesPatient =
+        !pq ||
+        c.patientName.toLowerCase().includes(pq) ||
+        (c.patientHcid && c.patientHcid.toLowerCase().includes(pq)) ||
+        c.patientMemberId.toLowerCase().includes(pq);
 
       const matchesStage = selectedStage === 'ALL' || c.currentStage === selectedStage;
       const matchesCat = selectedCategory === 'ALL' || c.category === selectedCategory;
+      const matchesPriority = selectedPriority === 'ALL' || c.priority === selectedPriority;
+      const matchesStatus = selectedStatus === 'ALL' || c.status === selectedStatus;
+      const matchesWorkbasket = selectedWorkbasket === 'ALL' || c.assignedWorkbasket === selectedWorkbasket;
+      const matchesClaimType = selectedClaimType === 'ALL' || c.claimType === selectedClaimType;
 
-      return matchesSearch && matchesStage && matchesCat;
+      return (
+        matchesSearch &&
+        matchesPatient &&
+        matchesStage &&
+        matchesCat &&
+        matchesPriority &&
+        matchesStatus &&
+        matchesWorkbasket &&
+        matchesClaimType
+      );
     });
-  }, [cases, searchQuery, selectedStage, selectedCategory]);
+  }, [
+    cases,
+    searchQuery,
+    patientFilter,
+    selectedStage,
+    selectedCategory,
+    selectedPriority,
+    selectedStatus,
+    selectedWorkbasket,
+    selectedClaimType,
+  ]);
 
   const getStageBadge = (stage: number) => {
     switch (stage) {
@@ -173,27 +235,169 @@ export const CasesCockpit: React.FC<CasesCockpitProps> = ({
         )}
       </div>
 
-      {/* Global Search Box */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder={
-              isDoctor
-                ? 'Global Search: Search Clinical Tasks by Task ID, Case Number, Claim ID, Patient Name, or HCID...'
-                : 'Global Search: Type Case ID (e.g. CASE-2026-0814), Claim ID, Patient Name, HCID, or Policy...'
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 font-sans transition-all placeholder:text-slate-400"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+      {/* Comprehensive Multi-Field Filter Panel */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+        {/* Row 1: Global Keyword Search & Patient / HCID Filter */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              id="filter-case-search"
+              type="text"
+              placeholder={
+                isDoctor
+                  ? 'Filter by Task ID, Case Number, Claim ID, or Title...'
+                  : 'Filter by Case Number (e.g. CASE-2026-00412), Claim ID, or Title...'
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 font-sans transition-all placeholder:text-slate-400"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="relative">
+            <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              id="filter-patient-search"
+              type="text"
+              placeholder="Filter by Patient Name or Healthcare ID (e.g. HCID-8492-1001-A)..."
+              value={patientFilter}
+              onChange={(e) => setPatientFilter(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 font-sans transition-all placeholder:text-slate-400"
+            />
+            {patientFilter && (
+              <button
+                type="button"
+                onClick={() => setPatientFilter('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Field Dropdowns & Reset Button */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
+            <Filter className="w-3 h-3 text-slate-400" />
+            <span>Field Filters:</span>
+          </div>
+
+          {/* Stage Milestone Filter */}
+          <select
+            id="filter-stage"
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+            className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="ALL">Stage: All Stages</option>
+            <option value="1">Stage 01: Capture Request</option>
+            <option value="2">Stage 02: Initial Review</option>
+            <option value="3">Stage 03: Claim & Auth Evidence</option>
+            <option value="4">Stage 04: Decision Stage</option>
+            <option value="5">Stage 05: Closeout & Settlement</option>
+            <option value="6">Stage 06: Resolved</option>
+          </select>
+
+          {/* Care Category Filter */}
+          <select
+            id="filter-category"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as any)}
+            className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="ALL">Category: All</option>
+            <option value="MEDICAL">Medical</option>
+            <option value="PHARMACY">Pharmacy</option>
+            <option value="PRESCRIPTION">Prescription</option>
+            <option value="BEHAVIORAL_HEALTH">Behavioral Health</option>
+          </select>
+
+          {/* Priority Filter */}
+          <select
+            id="filter-priority"
+            value={selectedPriority}
+            onChange={(e) => setSelectedPriority(e.target.value as any)}
+            className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="ALL">Priority: All</option>
+            <option value="URGENT">Urgent</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+
+          {/* Case Status Filter */}
+          <select
+            id="filter-status"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as any)}
+            className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="ALL">Status: All</option>
+            <option value="INTAKE_NEW">Intake New</option>
+            <option value="IN_REVIEW">In Review</option>
+            <option value="PENDING_EVIDENCE">Pending Evidence</option>
+            <option value="PENDING_CLINICAL">Pending Clinical</option>
+            <option value="FRAUD_HOLD">Fraud Hold</option>
+            <option value="APPROVED">Approved</option>
+            <option value="SETTLED">Settled</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+
+          {/* Workbasket Queue Filter */}
+          {!isDoctor && (
+            <select
+              id="filter-workbasket"
+              value={selectedWorkbasket}
+              onChange={(e) => setSelectedWorkbasket(e.target.value as any)}
+              className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <option value="ALL">Workbasket: All Queues</option>
+              <option value="INTAKE_TRIAGE">Intake Triage</option>
+              <option value="EVIDENCE_DEFICIENCY">Evidence Deficiency</option>
+              <option value="CLINICAL_REVIEW">Clinical Review</option>
+              <option value="FRAUD_SIU">Fraud SIU</option>
+              <option value="SETTLEMENT_FINANCE">Settlement Finance</option>
+            </select>
+          )}
+
+          {/* Claim Type Filter */}
+          {!isDoctor && (
+            <select
+              id="filter-claim-type"
+              value={selectedClaimType}
+              onChange={(e) => setSelectedClaimType(e.target.value as any)}
+              className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+            >
+              <option value="ALL">Type: All</option>
+              <option value="POST_SERVICE">Post-Service</option>
+              <option value="PRE_SERVICE">Pre-Service (Pre-Auth)</option>
+            </select>
+          )}
+
+          {/* Reset Filters CTA if any filter is active */}
+          {activeFilterCount > 0 && (
+            <button
+              id="filter-reset-all-btn"
+              type="button"
+              onClick={resetAllFilters}
+              className="ml-auto py-1 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+              title="Reset all active filters"
+            >
+              <RotateCcw className="w-3 h-3 text-slate-500" />
+              <span>Reset Filters ({activeFilterCount})</span>
             </button>
           )}
         </div>

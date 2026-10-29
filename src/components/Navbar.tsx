@@ -92,7 +92,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-none">
                 Claim Management
               </h1>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Claims Operations & Adjudication</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-[10px] text-slate-500 font-medium leading-none">Claims Operations</p>
+                <span className="text-slate-300 leading-none">·</span>
+                <span
+                  title="Live data synced from MongoDB Atlas cluster: omniclaim"
+                  className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 leading-none"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  MongoDB Atlas Live
+                </span>
+              </div>
             </div>
           </div>
         </div>

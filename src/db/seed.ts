@@ -506,6 +506,7 @@ export async function seedDatabase() {
   if (!existingClaim) {
     await claimService.createClaim({
       claimId: 'CLM-HIST-2026-8801',
+      caseId: 'case-hist-001',
       claimType: 'POST_SERVICE',
       careCategory: 'MEDICAL',
       provider: {

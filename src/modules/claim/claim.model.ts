@@ -25,7 +25,7 @@ export interface IClaimItem {
 
 export interface IClaim extends Document {
   claimId: string;
-  caseId: mongoose.Types.ObjectId;
+  caseId?: any;
   claimType: 'PRE_SERVICE' | 'POST_SERVICE';
   careCategory: CareCategory;
   provider: {
@@ -77,7 +77,7 @@ const ClaimItemSchema = new Schema<IClaimItem>({
 
 export const ClaimSchema = new Schema<IClaim>({
   claimId: { type: String, required: true, unique: true, index: true },
-  caseId: { type: Schema.Types.ObjectId, ref: 'Case', required: true, index: true },
+  caseId: { type: Schema.Types.Mixed, ref: 'Case', required: false, index: true },
   claimType: { type: String, enum: ['PRE_SERVICE', 'POST_SERVICE'], required: true },
   careCategory: { type: String, enum: ['MEDICAL', 'PHARMACY', 'PRESCRIPTION', 'BEHAVIORAL_HEALTH'], required: true },
   provider: {

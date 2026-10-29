@@ -65,8 +65,10 @@ class ClaimsEngine {
   private dcnRule = new DcnAuditRule();
   private fraudRule = new FraudScoringRule();
 
+  public dataSource: string = 'CONNECTING_ATLAS';
+
   constructor() {
-    // Attempt local storage hydration for persistence across refreshes
+    // Attempt local storage hydration first for instant render
     try {
       localStorage.removeItem('omniclaim_state_v1');
       localStorage.removeItem('omniclaim_state_v2');
@@ -78,7 +80,6 @@ class ClaimsEngine {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.cases && parsed.claims) {
-          // Verify that cached customers have valid HCIDs across all 60+ households
           const hasValidHcid =
             Array.isArray(parsed.customers) &&
             parsed.customers.length >= 60 &&
@@ -107,6 +108,35 @@ class ClaimsEngine {
         console.warn('Could not restore cached state, using seeds.');
       }
     }
+
+    // Hydrate directly from MongoDB Atlas backend
+    this.hydrateFromAtlas();
+  }
+
+  public async hydrateFromAtlas(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    try {
+      const res = await fetch('/api/engine/state');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.cases && data.customers) {
+          this.dataSource = data.source || 'MONGODB_ATLAS';
+          this.customers = data.customers;
+          this.policies = data.policies;
+          this.claims = data.claims;
+          this.cases = data.cases;
+          this.tasks = data.tasks;
+          this.evidences = data.evidences;
+          this.fraudAssessments = data.fraudAssessments;
+          this.events = data.events;
+          this.doctors = data.doctors;
+          console.log(`[OmniClaim Store] Live UI data loaded directly from: ${this.dataSource} (${data.database || 'omniclaim'})`);
+          this.notify();
+        }
+      }
+    } catch (err) {
+      console.warn('[OmniClaim Store] Atlas API sync deferred; using local cached engine data.');
+    }
   }
 
   private persist() {
@@ -131,6 +161,24 @@ class ClaimsEngine {
     } catch (e) {
       // storage quota or incognito
     }
+
+    // Synchronize mutations to live MongoDB Atlas
+    if (typeof window !== 'undefined') {
+      fetch('/api/engine/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cases: this.cases,
+          tasks: this.tasks,
+          evidences: this.evidences,
+          claims: this.claims,
+          events: this.events,
+        }),
+      }).catch((e) => {
+        console.warn('[OmniClaim Store] Background Atlas sync notice:', e);
+      });
+    }
+
     this.notify();
   }
 
@@ -1555,5 +1603,7 @@ export function useClaimsStore() {
     updateClaimServicesAndMember: claimsEngine.updateClaimServicesAndMember.bind(claimsEngine),
     advanceToDecisionStage: claimsEngine.advanceToDecisionStage.bind(claimsEngine),
     closeCaseAsDuplicate: claimsEngine.closeCaseAsDuplicate.bind(claimsEngine),
+    dataSource: claimsEngine.dataSource,
+    refreshFromAtlas: () => claimsEngine.hydrateFromAtlas(),
   };
 }

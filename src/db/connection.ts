@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import 'dotenv/config';
 import mongoose from 'mongoose';
 import { enableInMemoryMongooseFallback } from './inMemoryAdapter';
 
@@ -18,7 +19,7 @@ export async function connectDatabase(): Promise<typeof mongoose | null> {
   if (MONGODB_URI) {
     try {
       const conn = await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 2000,
+        serverSelectionTimeoutMS: 8000,
         autoIndex: true,
       });
       console.log(`[MongoDB] Connected to database: ${conn.connection.name}`);

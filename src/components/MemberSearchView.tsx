@@ -25,6 +25,7 @@ import {
   Sparkles,
   ArrowRight,
   RotateCcw,
+  X,
 } from 'lucide-react';
 
 interface MemberSearchViewProps {
@@ -138,6 +139,15 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
     executeSearch(presetHcid);
   };
 
+  const handleClearSearch = () => {
+    setQuery('');
+    setHasSearched(false);
+    setMatchedCustomer(null);
+    setMatchedPolicy(null);
+    setSelectedMember(null);
+    setSearchFeedback('');
+  };
+
   // Find cases for the matched customer
   const relatedCases = matchedCustomer
     ? cases.filter((c) => c.familyPolicyNumber === matchedCustomer.familyPolicyNumber)
@@ -179,7 +189,7 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
           </div>
         </div>
 
-        {/* Search Input Bar with explicit Search CTA */}
+        {/* Search Input Bar with explicit Search CTA and Clear CTA */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -194,8 +204,18 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
                   executeSearch();
                 }
               }}
-              className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 font-sans transition-all placeholder:text-slate-400"
+              className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 font-sans transition-all placeholder:text-slate-400"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer transition-colors"
+                title="Clear input"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <button
@@ -207,6 +227,19 @@ export const MemberSearchView: React.FC<MemberSearchViewProps> = ({
             <Search className="w-3.5 h-3.5" />
             <span>{isSearching ? 'Searching...' : 'Search Member'}</span>
           </button>
+
+          {(query || hasSearched) && (
+            <button
+              id="member-search-clear-btn"
+              type="button"
+              onClick={handleClearSearch}
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs hover:border-slate-400"
+              title="Clear search and start over"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Clear</span>
+            </button>
+          )}
         </div>
       </div>
 

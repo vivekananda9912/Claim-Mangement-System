@@ -117,8 +117,8 @@ export const CaseDetailView: React.FC<CaseDetailViewProps> = ({ caseId, onClose,
 
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
-      {/* Full Screen Top Header Bar */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+      {/* Case Header Action Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}

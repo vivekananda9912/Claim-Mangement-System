@@ -15,6 +15,7 @@ import { doctorRouter } from './modules/doctor/doctor.routes';
 import { fraudRouter } from './modules/fraud/fraud.routes';
 import { eventRouter } from './modules/event/event.routes';
 import { eligibilityRoutes } from './modules/eligibility/eligibility.routes';
+import { engineRouter } from './modules/engine/engine.routes';
 
 export const apiRouter = Router();
 
@@ -48,3 +49,4 @@ apiRouter.use('/fraud', fraudRouter);
 apiRouter.use('/events', eventRouter);
 apiRouter.use('/v2/eligibility', eligibilityRoutes);
 apiRouter.use('/eligibility', eligibilityRoutes);
+apiRouter.use('/engine', engineRouter);

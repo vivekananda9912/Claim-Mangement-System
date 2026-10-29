@@ -265,8 +265,8 @@ export const TaskWorkspaceView: React.FC<TaskWorkspaceViewProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
-      {/* Top Sticky Navigation Bar */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+      {/* Task Header Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}

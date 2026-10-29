@@ -227,6 +227,7 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
   const handleMemberSelect = (cust: Customer, member: FamilyMember) => {
     setSelectedCustomer(cust);
     setSelectedMember(member);
+    setShowDirectoryTable(false); // Automatically collapse dropdown/table!
     const pol = policies.find((p) => p.policyNumber === cust.familyPolicyNumber) ||
                 INITIAL_POLICIES.find((p) => p.policyNumber === cust.familyPolicyNumber) || null;
     setSelectedPolicy(pol);
@@ -385,6 +386,37 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
                 </button>
               </div>
 
+              {/* Quick Preset Subscriber Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1">
+                  Preset Subscribers:
+                </span>
+                {[
+                  { name: 'Eleanor Vance', hcid: 'HCID-8492-1001-A', role: 'Primary' },
+                  { name: 'Arthur Vance', hcid: 'HCID-8492-1002-B', role: 'Spouse' },
+                  { name: 'Chloe Vance', hcid: 'HCID-8492-1003-C', role: 'Child' },
+                  { name: 'Leo Vance', hcid: 'HCID-8492-1004-D', role: 'Child' },
+                  { name: 'Robert Chen', hcid: 'HCID-7721-3001-A', role: 'Primary' },
+                  { name: 'Carlos Morales', hcid: 'HCID-9150-4001-A', role: 'Primary' },
+                  { name: 'David Chen', hcid: 'HCID-6208-5001-A', role: 'Primary' },
+                ].map((pre) => (
+                  <button
+                    key={pre.hcid}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(pre.hcid);
+                      executeServiceSearch(pre.hcid);
+                      setShowDirectoryTable(false); // Auto-close table/dropdown
+                    }}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
+                    title={`Select & Search ${pre.name} (${pre.hcid})`}
+                  >
+                    <span className="font-semibold">{pre.name}</span>
+                    <span className="text-[9px] font-mono text-slate-400">({pre.role})</span>
+                  </button>
+                ))}
+              </div>
+
               {/* Master Eligibility Directory Table Toggle */}
               <div className="pt-1 border-t border-blue-100 flex items-center justify-between">
                 <button
@@ -447,6 +479,7 @@ export const PolicyIntakeWizard: React.FC<PolicyIntakeWizardProps> = ({
                                 onClick={() => {
                                   setSearchQuery(m.hcid);
                                   executeServiceSearch(m.hcid);
+                                  setShowDirectoryTable(false); // Close dropdown automatically!
                                 }}
                                 className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold cursor-pointer shadow-2xs"
                               >
